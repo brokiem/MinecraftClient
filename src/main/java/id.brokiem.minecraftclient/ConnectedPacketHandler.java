@@ -2,10 +2,7 @@ package id.brokiem.minecraftclient;
 
 import com.nukkitx.protocol.bedrock.BedrockClientSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
-import com.nukkitx.protocol.bedrock.packet.DisconnectPacket;
-import com.nukkitx.protocol.bedrock.packet.PacketViolationWarningPacket;
-import com.nukkitx.protocol.bedrock.packet.SetLocalPlayerAsInitializedPacket;
-import com.nukkitx.protocol.bedrock.packet.TextPacket;
+import com.nukkitx.protocol.bedrock.packet.*;
 
 public class ConnectedPacketHandler implements BedrockPacketHandler {
 
@@ -35,6 +32,7 @@ public class ConnectedPacketHandler implements BedrockPacketHandler {
     public boolean handle(DisconnectPacket packet) {
         MainLogger.info("Disconnected from server. " + packet.getKickMessage());
         session.disconnect();
+        MinecraftClient.getInstance().getClient().close();
 
         MinecraftClient.getInstance().setConnected(false);
         return true;

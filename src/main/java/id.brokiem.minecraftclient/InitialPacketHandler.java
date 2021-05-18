@@ -68,15 +68,6 @@ public class InitialPacketHandler implements BedrockPacketHandler {
     }
 
     @Override
-    public boolean handle(PlayStatusPacket packet) {
-        ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();
-        response.setStatus(ResourcePackClientResponsePacket.Status.HAVE_ALL_PACKS);
-        this.session.sendPacketImmediately(response);
-
-        return true;
-    }
-
-    @Override
     public final boolean handle(StartGamePacket packet) {
         int id = ThreadLocalRandom.current().nextInt(10000, 15000);
 
@@ -94,6 +85,7 @@ public class InitialPacketHandler implements BedrockPacketHandler {
     public boolean handle(DisconnectPacket packet) {
         MainLogger.info("Disconnected from server. " + packet.getKickMessage());
         session.disconnect();
+        minecraftClient.getClient().close();
 
         MinecraftClient.getInstance().setConnected(false);
         return true;
