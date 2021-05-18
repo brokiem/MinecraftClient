@@ -3,7 +3,6 @@ package id.brokiem.minecraftclient;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockClientSession;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
-import com.nukkitx.protocol.bedrock.packet.TextPacket;
 import com.nukkitx.protocol.bedrock.v431.Bedrock_v431;
 import io.netty.util.AsciiString;
 
