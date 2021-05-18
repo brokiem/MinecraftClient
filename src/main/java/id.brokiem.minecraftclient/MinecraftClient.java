@@ -7,25 +7,41 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class MinecraftClient {
 
+    private BedrockClient client;
+
     public static void main(String[] args) throws IOException {
-        System.out.println("Starting MinecraftClient...");
+        MainLogger.notice("Starting MinecraftClient...");
+        MinecraftClient minecraftClient = new MinecraftClient();
+
+        MainLogger.notice("Creating client...");
+        minecraftClient.makeClient();
+
+        MainLogger.notice("MinecraftClient started succesfully");
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        String input = reader.readLine();
+        String inputIP = reader.readLine();
 
-        System.out.println("Connecting to " + input + " with port 19132...");
-        connect(input, 19132);
+        minecraftClient.connect(inputIP, 19132);
     }
 
-    public static void connect(String ip, int port) {
-        InetSocketAddress address = new InetSocketAddress(ip, port);
+    public void makeClient() {
+        int port = ThreadLocalRandom.current().nextInt(20000, 60000);
+        InetSocketAddress address = new InetSocketAddress("0.0.0.0", port);
         BedrockClient client = new BedrockClient(address);
 
         client.bind().join();
-        client.connect(address).whenComplete((session, throwable) -> {
+        this.client = client;
+    }
+
+    public void connect(String ip, int port) {
+        MainLogger.notice("Connecting to " + ip + " with port " + port + "...");
+
+        InetSocketAddress address = new InetSocketAddress(ip, port);
+        this.client.connect(address).whenComplete((session, throwable) -> {
             if (throwable != null) {
                 System.out.println(throwable.getMessage());
                 return;
@@ -33,7 +49,7 @@ public class MinecraftClient {
 
             session.setPacketCodec(Bedrock_v431.V431_CODEC);
             session.addDisconnectHandler((reason) -> System.out.println("Disconnected from the server"));
-            session.setPacketHandler(new PacketHandler());
+            session.setPacketHandler(new PacketHandler(session));
         }).join();
     }
 }
