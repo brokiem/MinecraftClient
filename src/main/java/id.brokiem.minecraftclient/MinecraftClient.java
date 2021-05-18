@@ -2,6 +2,7 @@ package id.brokiem.minecraftclient;
 
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockClientSession;
+import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import com.nukkitx.protocol.bedrock.v431.Bedrock_v431;
 import io.netty.util.AsciiString;
@@ -77,14 +78,14 @@ public class MinecraftClient {
 
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-            MainLogger.info("---------- Please enter the ip ----------");
+            MainLogger.info("---------- Please enter the address ----------");
             String ip = reader.readLine();
+            MainLogger.info("Address: " + ip);
             MainLogger.info("---------- Please enter the port too ----");
             int port = Integer.parseInt(reader.readLine());
+            MainLogger.info("Port: " + port);
 
-            if (ip != null) {
-                this.connect(ip, port);
-            }
+            this.connect(ip, port);
         } catch (IOException ignored) { }
 
         this.isInputed = false;
@@ -104,7 +105,7 @@ public class MinecraftClient {
         return this.client;
     }
 
-    public void connect(String ip, int port) throws IOException {
+    public void connect(String ip, int port) {
         MainLogger.info("Connecting to " + ip + " with port " + port + "...");
 
         InetSocketAddress address = new InetSocketAddress(ip, port);
@@ -118,11 +119,15 @@ public class MinecraftClient {
 
             session.setPacketCodec(Bedrock_v431.V431_CODEC);
             session.addDisconnectHandler((reason) -> this.input());
-            session.addDisconnectHandler((reason) -> MainLogger.error("Disconnected from the server. " + reason.toString()));
+            session.addDisconnectHandler((reason) -> MainLogger.error("Disconnected from the server. " + reason.toString() + "\n"));
             session.setPacketHandler(new InitialPacketHandler(session, this));
 
             session.sendPacketImmediately(this.getLoginPacket());
         }).join();
+    }
+
+    public BedrockSession getSession() {
+        return this.session;
     }
 
     public LoginPacket getLoginPacket(){

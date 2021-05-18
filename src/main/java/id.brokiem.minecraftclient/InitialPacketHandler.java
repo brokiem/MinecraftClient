@@ -47,7 +47,7 @@ public class InitialPacketHandler implements BedrockPacketHandler {
         }
 
         ClientToServerHandshakePacket clientToServerHandshake = new ClientToServerHandshakePacket();
-        this.session.sendPacket(clientToServerHandshake);
+        this.session.sendPacketImmediately(clientToServerHandshake);
         return true;
     }
 
@@ -83,7 +83,7 @@ public class InitialPacketHandler implements BedrockPacketHandler {
 
     @Override
     public boolean handle(DisconnectPacket packet) {
-        MainLogger.info("Disconnected from server. " + packet.getKickMessage());
+        MainLogger.info("Disconnected from server. " + packet.getKickMessage() + "\n");
         session.disconnect();
         minecraftClient.getClient().close();
 
