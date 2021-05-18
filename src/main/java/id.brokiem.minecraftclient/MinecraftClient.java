@@ -17,11 +17,13 @@ import java.util.concurrent.ThreadLocalRandom;
 public class MinecraftClient {
 
     public static boolean debug = true;
+    public static boolean isConnected;
     public int playerId;
     private BedrockClient client;
     public KeyPair keyPair;
     private BedrockClientSession session;
     private static MinecraftClient instance;
+    private static boolean isRunning;
 
     public static MinecraftClient getInstance() {
         if (instance == null) {
@@ -31,19 +33,49 @@ public class MinecraftClient {
         return instance;
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         MainLogger.info("Starting MinecraftClient...");
         MinecraftClient minecraftClient = new MinecraftClient();
 
-        MainLogger.info("Creating client...");
-        minecraftClient.makeClient();
-
         MainLogger.info("MinecraftClient started successfully");
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        String inputIP = reader.readLine();
+        minecraftClient.input();
 
-        minecraftClient.connect(inputIP, 19132);
+        isRunning = true;
+        minecraftClient.loop();
+    }
+
+    public void setConnected(boolean b) {
+        isConnected = b;
+        this.input();
+    }
+
+    private void loop() {
+        while (isRunning) {
+            try {
+                synchronized (this) {
+                    this.wait();
+                }
+            } catch (InterruptedException ignored) {
+            }
+        }
+    }
+
+    public void input() {
+        MainLogger.info("Creating client...");
+        this.makeClient();
+
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            MainLogger.info("---------- Please enter the ip ----------");
+            String ip = reader.readLine();
+            MainLogger.info("---------- Please enter the port too ----------");
+            int port = Integer.parseInt(reader.readLine());
+
+            if (ip != null) {
+                this.connect(ip, port);
+            }
+        } catch (IOException ignored) { }
     }
 
     public void makeClient() {
@@ -53,6 +85,11 @@ public class MinecraftClient {
 
         client.bind().join();
         this.client = client;
+        MainLogger.info("Client created succesfully");
+    }
+
+    public BedrockClient getClient(){
+        return this.client;
     }
 
     public void connect(String ip, int port) throws IOException {
@@ -68,14 +105,12 @@ public class MinecraftClient {
             this.session = session;
 
             session.setPacketCodec(Bedrock_v431.V431_CODEC);
+            session.addDisconnectHandler((reason) -> this.input());
             session.addDisconnectHandler((reason) -> System.out.println("Disconnected from the server. " + reason.toString()));
             session.setPacketHandler(new InitialPacketHandler(session, this));
 
             session.sendPacketImmediately(this.getLoginPacket());
         }).join();
-
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        String nou = reader.readLine();
     }
 
     public void chat(String message) {
