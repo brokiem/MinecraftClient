@@ -86,6 +86,7 @@ public class InitialPacketHandler implements BedrockPacketHandler {
 
         MainLogger.info("Connected to the server!");
         this.session.setPacketHandler(new ConnectedPacketHandler(this.session));
+        MinecraftClient.getInstance().setConnected(true);
         return true;
     }
 
