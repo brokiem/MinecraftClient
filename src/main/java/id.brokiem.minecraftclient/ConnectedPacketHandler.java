@@ -31,7 +31,6 @@ public class ConnectedPacketHandler implements BedrockPacketHandler {
     public boolean handle(DisconnectPacket packet) {
         MainLogger.info("Disconnected from server. " + packet.getKickMessage());
         session.disconnect();
-        MinecraftClient.getInstance().getClient().close();
 
         MinecraftClient.getInstance().setConnected(false);
         return true;

@@ -62,6 +62,7 @@ public class MinecraftClient {
     }
 
     public void input() {
+        if (this.client != null) { this.client.close(); }
         MainLogger.info("Creating client...");
         this.makeClient();
 
