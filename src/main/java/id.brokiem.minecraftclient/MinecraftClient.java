@@ -20,7 +20,7 @@ public class MinecraftClient {
         MainLogger.notice("Creating client...");
         minecraftClient.makeClient();
 
-        MainLogger.notice("MinecraftClient started succesfully");
+        MainLogger.notice("MinecraftClient started successfully");
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String inputIP = reader.readLine();
@@ -43,7 +43,7 @@ public class MinecraftClient {
         InetSocketAddress address = new InetSocketAddress(ip, port);
         this.client.connect(address).whenComplete((session, throwable) -> {
             if (throwable != null) {
-                System.out.println(throwable.getMessage());
+                MainLogger.error(throwable.getMessage());
                 return;
             }
 
