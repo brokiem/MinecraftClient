@@ -43,7 +43,7 @@ public class MinecraftClient {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String inputIP = reader.readLine();
 
-        minecraftClient.connect(inputIP, 2000);
+        minecraftClient.connect(inputIP, 19132);
     }
 
     public void makeClient() {
