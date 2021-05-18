@@ -1,2 +1,2 @@
-# MinecraftClient
-Minecraft Client is a Minecraft client written in java with [Nukkit protocol library](https://github.com/CloudburstMC/Protocol)
+# MinecraftClient 
+This project is a Minecraft client written in javascript with [PrismarineJS protocol library](https://github.com/PrismarineJS/bedrock-protocol)
