@@ -11,6 +11,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class MinecraftClient {
 
+    public static boolean debug = true;
     private BedrockClient client;
 
     public static void main(String[] args) throws IOException {

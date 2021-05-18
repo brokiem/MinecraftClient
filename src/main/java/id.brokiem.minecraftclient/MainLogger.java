@@ -11,4 +11,10 @@ public class MainLogger {
     public static void error(String text){
         System.out.println("[MinecraftClient / ERROR] " + text);
     }
+
+    public static void debug(String text){
+        if (MinecraftClient.debug) {
+            System.out.println("[MinecraftClient / DEBUG] " + text);
+        }
+    }
 }

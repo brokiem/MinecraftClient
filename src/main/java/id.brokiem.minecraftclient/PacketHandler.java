@@ -14,7 +14,7 @@ public class PacketHandler implements BedrockPacketHandler {
 
     @Override
     public boolean handle(LoginPacket packet) {
-        MainLogger.notice("LoginPacket");
+        MainLogger.debug("LoginPacket");
         return BedrockPacketHandler.super.handle(packet);
     }
 }
