@@ -2,6 +2,9 @@
   "name": "minecraftclient",
   "version": "1.0.0",
   "dependencies": {
-    "bedrock-protocol": "^3.1.0"
+    "@azure/msal-node": "^1.1.0",
+    "bedrock-protocol": "^3.1.0",
+    "jose-node-cjs-runtime": "^3.12.2",
+    "smart-buffer": "^4.1.0"
   }
 }

@@ -1,30 +1,40 @@
+process.env.DEBUG = 'minecraft-protocol'
+
 const { Client } = require('bedrock-protocol');
 
 class MinecraftClient {
-
-    async start() {
-        const options = {
-            host: 'localhost',      // Server address to connect
-            port: 19132,            // Server port
-            username: 'MClient890', // Minecraft username (Gamertag)
-            offline: false,         // Offline mode. set false if you want enable xbox auth
-            version: "1.16.220"     // Client version (1.16.201, 1.16.210, 1.16.220)
-        }
-
-        const client = new Client(options);
-        await client.connect();
-        this.info("Connecting...")
-
-        client.on('packet', () => {
-            this.handlePacket(client)
+    async connect(address, port, username = "MClient890", online = true, version = "1.16.220") {
+        const client = new Client({
+            host: address,
+            port: port,
+            username: username,
+            offline: !online,
+            version: version,
+            authTitle: Client.MinecraftNintendoSwitch
         });
-    }
 
-    handlePacket(client) {
+        await client.connect();
+
         client.on('text', (packet) => console.log("[TextPacket] > " + packet.message));
 
         client.on('start_game', (packet) => {
+            this.rid = packet.runtime_id;
             client.queue('set_local_player_as_initialized', {runtime_entity_id: packet.runtime_entity_id});
+        });
+
+        client.on('move_player', (packet) => {
+            client.queue('move_player', {
+                runtime_id: this.rid,
+                position: packet.position,
+                pitch: packet.pitch,
+                yaw: packet.yaw,
+                head_yaw: packet.head_yaw,
+                mode: packet.mode,
+                on_ground: true,
+                teleport: packet.teleport,
+                tick: packet.tick,
+                ridden_runtime_id: packet.ridden_runtime_id
+            });
         });
 
         client.once('resource_packs_info', () => {
@@ -41,14 +51,10 @@ class MinecraftClient {
             });
 
             client.queue('client_cache_status', {enabled: false});
-            client.queue('request_chunk_radius', {chunk_radius: 8});
+            client.queue('request_chunk_radius', {chunk_radius: 1});
             client.queue('tick_sync', {request_time: BigInt(Date.now()), response_time: 0n});
         });
     }
-
-    info(text) {
-        console.log("[MinecraftClient / INFO] " + text)
-    }
 }
 
-(new MinecraftClient()).start()
+(new MinecraftClient).connect("localhost", 19132);
