@@ -1,0 +1,7 @@
+{
+  "name": "minecraftclient",
+  "version": "1.0.0",
+  "dependencies": {
+    "bedrock-protocol": "^3.1.0"
+  }
+}
