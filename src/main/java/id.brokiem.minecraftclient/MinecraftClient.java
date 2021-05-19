@@ -83,7 +83,7 @@ public class MinecraftClient {
             MainLogger.info("Address: " + ip);
             MainLogger.info("---------- Please enter the port too ----");
             int port = Integer.parseInt(reader.readLine());
-            MainLogger.info("Port: " + port);
+            MainLogger.info("Port: " + port + "\n");
 
             this.connect(ip, port);
         } catch (IOException ignored) { }
@@ -96,7 +96,7 @@ public class MinecraftClient {
         InetSocketAddress address = new InetSocketAddress("0.0.0.0", port);
         BedrockClient client = new BedrockClient(address);
 
-        client.bind().join();
+        client.bind();
         this.client = client;
         MainLogger.info("Client created succesfully");
     }
@@ -111,7 +111,8 @@ public class MinecraftClient {
         InetSocketAddress address = new InetSocketAddress(ip, port);
         this.client.connect(address).whenComplete((session, throwable) -> {
             if (throwable != null) {
-                MainLogger.error(throwable.getMessage());
+                MainLogger.error("Failed connecting: " + throwable.getMessage() + " / is the server online? \n");
+                this.input();
                 return;
             }
 
@@ -123,7 +124,7 @@ public class MinecraftClient {
             session.setPacketHandler(new InitialPacketHandler(session, this));
 
             session.sendPacketImmediately(this.getLoginPacket());
-        }).join();
+        });
     }
 
     public BedrockSession getSession() {

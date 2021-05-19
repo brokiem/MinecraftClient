@@ -14,6 +14,10 @@ public class MainLogger {
         System.out.println("[MinecraftClient / INFO] " + text);
     }
 
+    public static void warning(String text){
+        System.out.println("[MinecraftClient / WARNING] " + text);
+    }
+
     public static void error(String text){
         System.out.println("[MinecraftClient / ERROR] " + text);
     }
