@@ -15,12 +15,29 @@ class MinecraftClient {
 
         await client.connect();
 
-        client.on('text', (packet) => console.log("[TextPacket] > " + packet.message));
-
         client.on('start_game', (packet) => {
             this.rid = packet.runtime_id;
+            this.eid = packet.runtime_entity_id;
             client.queue('set_local_player_as_initialized', {runtime_entity_id: packet.runtime_entity_id});
         });
+
+        client.on('mob_equipment', (packet) => {
+            client.queue('mob_equipment', {
+                runtime_entity_id: this.eid,
+                item: packet.item,
+                slot: packet.slot,
+                selected_slot: packet.selected_slot,
+                window_id: packet.window_id
+            })
+        })
+
+        client.on('modal_form_request', (packet) => {
+            console.log(packet)
+            client.queue('modal_form_response', {
+                form_id: packet.form_id,
+                data: "0"
+            })
+        })
 
         client.on('move_player', (packet) => {
             client.queue('move_player', {
@@ -51,7 +68,7 @@ class MinecraftClient {
             });
 
             client.queue('client_cache_status', {enabled: false});
-            client.queue('request_chunk_radius', {chunk_radius: 1});
+            client.queue('request_chunk_radius', {chunk_radius: 2});
             client.queue('tick_sync', {request_time: BigInt(Date.now()), response_time: 0n});
         });
     }
