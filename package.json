@@ -1,0 +1,11 @@
+{
+  "name": "minecraftclient-discord",
+  "version": "1.0.0",
+  "dependencies": {
+    "bedrock-protocol": "github:extremeheat/bedrock-protocol#skins",
+    "discord.js": "^12.5.3"
+  },
+  "devDependencies": {
+    "minecraft-server-util": "3.4.4"
+  }
+}
