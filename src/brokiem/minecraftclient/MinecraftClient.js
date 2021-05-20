@@ -1,4 +1,4 @@
-process.env.DEBUG = 'minecraft-protocol'
+//process.env.DEBUG = 'minecraft-protocol'
 
 const { Client } = require('bedrock-protocol');
 
@@ -15,43 +15,23 @@ class MinecraftClient {
 
         await client.connect();
 
+        function chat(client, str) {
+            client.queue('text', {
+                type: 'chat',
+                needs_translation: false,
+                source_name: str,
+                message: str,
+                paramaters: undefined,
+                xuid: '0',
+                platform_chat_id: '0'
+            })
+        }
+
         client.on('start_game', (packet) => {
-            this.rid = packet.runtime_id;
-            this.eid = packet.runtime_entity_id;
-            client.queue('set_local_player_as_initialized', {runtime_entity_id: packet.runtime_entity_id});
-        });
+            this.runtime_id = packet.runtime_id;
+            this.runtime_entity_id = packet.runtime_entity_id;
 
-        client.on('mob_equipment', (packet) => {
-            client.queue('mob_equipment', {
-                runtime_entity_id: this.eid,
-                item: packet.item,
-                slot: packet.slot,
-                selected_slot: packet.selected_slot,
-                window_id: packet.window_id
-            })
-        })
-
-        client.on('modal_form_request', (packet) => {
-            console.log(packet)
-            client.queue('modal_form_response', {
-                form_id: packet.form_id,
-                data: "0"
-            })
-        })
-
-        client.on('move_player', (packet) => {
-            client.queue('move_player', {
-                runtime_id: this.rid,
-                position: packet.position,
-                pitch: packet.pitch,
-                yaw: packet.yaw,
-                head_yaw: packet.head_yaw,
-                mode: packet.mode,
-                on_ground: true,
-                teleport: packet.teleport,
-                tick: packet.tick,
-                ridden_runtime_id: packet.ridden_runtime_id
-            });
+            client.queue('set_local_player_as_initialized', {runtime_entity_id: this.runtime_entity_id});
         });
 
         client.once('resource_packs_info', () => {
@@ -73,5 +53,3 @@ class MinecraftClient {
         });
     }
 }
-
-(new MinecraftClient).connect("localhost", 19132);
