@@ -48,8 +48,8 @@ dsclient.on('message', async message => {
         case "form":
             if (isConnected()) {
                 if (args.length > 0) {
-                    modalResponse(args.join(" "));
-                    await message.channel.send("> Sending modal form response...")
+                    await message.channel.send("> Sending modal form response")
+                    sendModalResponse(args.join(" "));
                 }
             } else {
                 await message.channel.send("> I haven't connected to any server yet!\n")
@@ -60,8 +60,10 @@ dsclient.on('message', async message => {
                 if (args.length > 0) {
                     if (args[0] === "true") {
                         enableChat = true;
+                        await message.channel.send("> Chat successfully enabled")
                     } else if (args[0] === "false") {
                         enableChat = false;
+                        await message.channel.send("> Chat successfully disabled")
                     }
                 }
             }
@@ -112,22 +114,30 @@ function connect(channel, address, port = 19132, version = "1.16.220") {
 
         client.on('modal_form_request', (packet) => {
             const jsonData = JSON.parse(packet.data);
-            const string = "abcdefgklmr0123456789";
+            const string = "abcdefgklmr0123456789"; // minecraft color
 
             formId = packet.form_id;
 
-            let filteredText = jsonData.content;
-            for (let i = 0; i < jsonData.content.length; i++) {
-                filteredText = filteredText.split('§' + string[i]).join('')
+            console.log(jsonData)
+
+            if (jsonData.type === 'form') {
+                let filteredText = jsonData.content;
+                for (let i = 0; i < jsonData.content.length; i++) {
+                    filteredText = filteredText.split('§' + string[i]).join('')
+                }
+
+                channel.send("> ModalFormRequestPacket recieved\n```Form ID: " + packet.form_id + "\n\n           " + jsonData.title + "\n" + filteredText + "\n\n ```")
+                let buttonId = 0;
+                jsonData.buttons.forEach((fn) => {
+                    channel.send("```" + fn.text + " - " + buttonId + "```");
+
+                    buttonId++;
+                })
+                channel.send("> Type (*form <button number>) to response")
+            } else {
+                channel.send("> I can't handle custom form yet :(")
+                sendModalResponse("0") // unhandled
             }
-
-            channel.send("> ModalFormRequestPacket recieved\n```Form ID: "+packet.form_id+"\n\n           "+jsonData.title +"\n"+filteredText+"\n\n ```")
-            let buttonId = 0;
-            jsonData.buttons.forEach((fn) => {
-                channel.send("```" + fn.text + " - " + buttonId + "```");
-
-                buttonId++;
-            })
         })
 
         this.cachedFilteredTextPacket = [];
@@ -164,6 +174,11 @@ function connect(channel, address, port = 19132, version = "1.16.220") {
             client.queue('tick_sync', {request_time: BigInt(Date.now()), response_time: 0n});
         });
 
+        client.once('close', () => {
+            this.channelId = undefined;
+            channel.send("> Disconnected from server: something unexpected happened")
+        })
+
         client.once('disconnect', (packet) => {
             this.channelId = undefined;
             channel.send("> Disconnected from server:\n```" + packet.message + "```")
@@ -175,13 +190,13 @@ function connect(channel, address, port = 19132, version = "1.16.220") {
 }
 
 function sendCachedTextPacket(channel) {
-    if ((this.cachedFilteredTextPacket.length > 0) && enableChat) {
+    if ((this.cachedFilteredTextPacket.length > 0) && this.channelId !== undefined && enableChat) {
         channel.send("> TextPacket recieved\n```" + this.cachedFilteredTextPacket.join("\n") + "```")
         this.cachedFilteredTextPacket = [];
     }
 }
 
-function modalResponse(string) {
+function sendModalResponse(string) {
     this.connClient.queue('modal_form_response', {
         form_id: formId,
         data: string
@@ -201,7 +216,7 @@ function chat(string) {
 }
 
 function isConnected() {
-    return this.connClient !== undefined;
+    return this.connClient !== undefined && this.channelId !== undefined;
 }
 
 function disconnect(channel) {
