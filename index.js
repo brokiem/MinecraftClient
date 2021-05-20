@@ -5,7 +5,7 @@ const dsclient = new discord.Client();
 const {Client} = require('bedrock-protocol');
 const query = require('minecraft-server-util')
 
-dsclient.login("enteryourtokenhereokeditthisfieldandenteryourtokenidoot").catch(() => {
+dsclient.login("").catch(() => {
     console.error("The bot token was incorrect.")
     process.exit()
 })
@@ -45,6 +45,27 @@ dsclient.on('message', async message => {
                 await message.channel.send("> I haven't connected to any server yet!\n")
             }
             break;
+        case "form":
+            if (isConnected()) {
+                if (args.length > 0) {
+                    modalResponse(args.join(" "));
+                    await message.channel.send("> Sending modal form response...")
+                }
+            } else {
+                await message.channel.send("> I haven't connected to any server yet!\n")
+            }
+            break;
+        case "enablechat":
+            if (isConnected()) {
+                if (args.length > 0) {
+                    if (args[0] === "true") {
+                        enableChat = true;
+                    } else if (args[0] === "false") {
+                        enableChat = false;
+                    }
+                }
+            }
+            break;
         case "close":
         case "disconnect":
             disconnect(message.channel);
@@ -52,6 +73,8 @@ dsclient.on('message', async message => {
     }
 })
 
+let enableChat = true;
+let formId;
 function connect(channel, address, port = 19132, version = "1.16.220") {
     if (isConnected()) {
         channel.send("> I've connected to the server in <#" + this.channelId + "> !")
@@ -75,6 +98,8 @@ function connect(channel, address, port = 19132, version = "1.16.220") {
         channel.send("> Started packet reading...")
         client.connect();
 
+        setInterval(function(){sendCachedTextPacket(channel)}, 5000);
+
         this.connClient = client;
 
         client.on('start_game', (packet) => {
@@ -85,19 +110,41 @@ function connect(channel, address, port = 19132, version = "1.16.220") {
             channel.send("> Successfully connected to the server!~");
         });
 
+        client.on('modal_form_request', (packet) => {
+            const jsonData = JSON.parse(packet.data);
+            const string = "abcdefgklmr0123456789";
+
+            formId = packet.form_id;
+
+            let filteredText = jsonData.content;
+            for (let i = 0; i < jsonData.content.length; i++) {
+                filteredText = filteredText.split('§' + string[i]).join('')
+            }
+
+            channel.send("> ModalFormRequestPacket recieved\n```Form ID: "+packet.form_id+"\n\n           "+jsonData.title +"\n"+filteredText+"\n\n ```")
+            let buttonId = 0;
+            jsonData.buttons.forEach((fn) => {
+                channel.send("```" + fn.text + " - " + buttonId + "```");
+
+                buttonId++;
+            })
+        })
+
         this.cachedFilteredTextPacket = [];
         let filteredTextPacket;
         client.on('text', (packet) => {
-            const string = "abcdefgklmr0123456789";
+            if (enableChat) {
+                const string = "abcdefgklmr0123456789";
 
-            filteredTextPacket = packet.message;
-            for (let i = 0; i < string.length; i++) {
-                filteredTextPacket = filteredTextPacket.split('§' + string[i]).join('').replace('discord', 'shit')
+                filteredTextPacket = packet.message;
+                if (filteredTextPacket !== undefined) {
+                    for (let i = 0; i < string.length; i++) {
+                        filteredTextPacket = filteredTextPacket.split('§' + string[i]).join('').replace('discord', 'shit')
+                    }
+                    this.cachedFilteredTextPacket.push(filteredTextPacket);
+                }
             }
-            this.cachedFilteredTextPacket.push(filteredTextPacket);
         })
-
-        setInterval(function(){sendCachedTextPacket(channel)}, 2500);
 
         client.once('resource_packs_info', () => {
             client.write('resource_pack_client_response', {
@@ -123,15 +170,22 @@ function connect(channel, address, port = 19132, version = "1.16.220") {
         })
     }).catch((error) => {
         this.channelId = undefined;
-        channel.send("> Error when pingging the server: " + error.message)
+        channel.send("> Unable to connect to [" + address+ "]/"+port+". " + error.message)
     });
 }
 
 function sendCachedTextPacket(channel) {
-    if (this.cachedFilteredTextPacket.length > 1) {
+    if ((this.cachedFilteredTextPacket.length > 0) && enableChat) {
         channel.send("> TextPacket recieved\n```" + this.cachedFilteredTextPacket.join("\n") + "```")
         this.cachedFilteredTextPacket = [];
     }
+}
+
+function modalResponse(string) {
+    this.connClient.queue('modal_form_response', {
+        form_id: formId,
+        data: string
+    })
 }
 
 function chat(string) {
