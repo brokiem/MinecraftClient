@@ -1,4 +1,4 @@
-//process.env.DEBUG = 'minecraft-protocol'
+process.env.DEBUG = 'minecraft-protocol'
 
 const discord = require('discord.js')
 const dsclient = new discord.Client();
@@ -37,26 +37,26 @@ dsclient.on('message', async message => {
             if (isConnected()) {
                 if (args.length > 0) {
                     chat(args.join(" "));
-                    await message.channel.send("> :small_red_triangle: Send message success!")
+                    await message.channel.send(":small_red_triangle: Send message success!")
                 } else {
-                    await message.channel.send("> :stop_button: Please enter the message!");
+                    await message.channel.send(":octagonal_sign: Please enter the message!");
                 }
             } else {
-                await message.channel.send("> :stop_button: I haven't connected to any server yet!\n")
+                await message.channel.send(":octagonal_sign: I haven't connected to any server yet!\n")
             }
             break;
         case "form":
             if (isConnected()) {
                 if (formId !== undefined) {
                     if (args.length > 0) {
-                        await message.channel.send("> :small_red_triangle: Sending modal form response")
+                        await message.channel.send(":small_red_triangle: Sending modal form response")
                         sendModalResponse(args.join(" "));
                     }
                 } else {
-                    await message.channel.send("> :stop_button: No ModalFormRequestPacket found!")
+                    await message.channel.send(":octagonal_sign: No ModalFormRequestPacket found!")
                 }
             } else {
-                await message.channel.send("> :stop_button: I haven't connected to any server yet!\n")
+                await message.channel.send(":octagonal_sign: I haven't connected to any server yet!\n")
             }
             break;
         case "enablechat":
@@ -64,10 +64,10 @@ dsclient.on('message', async message => {
                 if (args.length > 0) {
                     if (args[0] === "true") {
                         enableChat = true;
-                        await message.channel.send("> :ballot_box_with_check: Chat successfully enabled")
+                        await message.channel.send(":ballot_box_with_check: Chat successfully enabled")
                     } else if (args[0] === "false") {
                         enableChat = false;
-                        await message.channel.send("> :ballot_box_with_check: Chat successfully disabled")
+                        await message.channel.send(":ballot_box_with_check: Chat successfully disabled")
                     }
                 }
             }
@@ -83,11 +83,11 @@ let enableChat = true;
 let formId;
 function connect(channel, address, port = 19132, version = "1.16.220") {
     if (isConnected()) {
-        channel.send("> :stop_button: I've connected to the server in <#" + this.channelId + "> !")
+        channel.send(":octagonal_sign: I've connected to the server in <#" + this.channelId + "> !")
         return;
     }
 
-    channel.send("> :airplane: Connecting to " + address + " on port " + port)
+    channel.send(":airplane: Connecting to " + address + " on port " + port)
     this.channelId = channel.id;
 
     query.statusBedrock(address, {
@@ -101,7 +101,7 @@ function connect(channel, address, port = 19132, version = "1.16.220") {
             authTitle: '00000000441cc96b'
         });
 
-        channel.send("> :newspaper: Started packet reading...")
+        channel.send(":newspaper: Started packet reading...")
         client.connect();
 
         setInterval(function(){sendCachedTextPacket(channel)}, 5000);
@@ -113,7 +113,7 @@ function connect(channel, address, port = 19132, version = "1.16.220") {
             this.runtime_entity_id = packet.runtime_entity_id;
 
             client.queue('set_local_player_as_initialized', {runtime_entity_id: this.runtime_entity_id});
-            channel.send("> :signal_strength: Successfully connected to the server!~");
+            channel.send(":signal_strength: Successfully connected to the server!~");
         });
 
         client.on('modal_form_request', (packet) => {
@@ -128,17 +128,18 @@ function connect(channel, address, port = 19132, version = "1.16.220") {
                     filteredText = filteredText.split('§' + string[i]).join('')
                 }
 
-                channel.send("> :arrow_lower_right: ModalFormRequestPacket recieved\n```Form ID: " + packet.form_id + "\n\n           " + jsonData.title + "\n" + filteredText + "\n ```")
+                let text = ":arrow_lower_right: **ModalFormRequestPacket received**\n\nForm ID: " + packet.form_id + "\n\n           " + jsonData.title + "\n" + filteredText + "\n\n";
                 let buttonId = 0;
                 let buttons = [];
                 jsonData.buttons.forEach((fn) => {
-                    buttons.push("```ID: " + buttonId + " | Button: " + fn.text + "```");
+                    buttons.push("ID: " + buttonId + " | Button: " + fn.text + "");
 
                     buttonId++;
                 })
-                channel.send(buttons.join("\n") +"\n> Type (*form <button id>) to response")
+
+                channel.send(makeEmbed(text + "```" + buttons.join("\n") + "```" + "\nType ( *form <button id> ) to response"))
             } else {
-                channel.send("> :stop_button: I can't handle custom form yet :(")
+                channel.send(":octagonal_sign: I can't handle custom form yet :(")
                 sendModalResponse("0") // unhandled
             }
         })
@@ -177,26 +178,31 @@ function connect(channel, address, port = 19132, version = "1.16.220") {
             client.queue('tick_sync', {request_time: BigInt(Date.now()), response_time: 0n});
         });
 
-        client.once('close', () => {
-            this.channelId = undefined;
-            channel.send("> :stop_button: Disconnected: Client closed!")
-        })
-
         client.once('disconnect', (packet) => {
             this.channelId = undefined;
-            channel.send("> :stop_button: Disconnected from server:\n```" + packet.message + "```")
+            channel.send(":octagonal_sign: Disconnected from server:\n```" + packet.message + "```")
         })
+
+        client.once('close', () => {
+            this.channelId = undefined;
+            channel.send(":octagonal_sign: Disconnected: Client closed!")
+        })
+
     }).catch((error) => {
         this.channelId = undefined;
-        channel.send("> :stop_button: Unable to connect to [" + address+ "]/"+port+". " + error.message)
+        channel.send(":octagonal_sign: Unable to connect to [" + address+ "]/"+port+". " + error.message)
     });
 }
 
 function sendCachedTextPacket(channel) {
     if ((this.cachedFilteredTextPacket.length > 0) && this.channelId !== undefined && enableChat) {
-        channel.send("> :arrow_lower_right: TextPacket recieved\n```" + this.cachedFilteredTextPacket.join("\n") + "```")
+        channel.send(makeEmbed(this.cachedFilteredTextPacket.join("\n\n")))
         this.cachedFilteredTextPacket = [];
     }
+}
+
+function makeEmbed(string) {
+    return new discord.MessageEmbed().setDescription(string);
 }
 
 function sendModalResponse(string) {
@@ -224,7 +230,7 @@ function isConnected() {
 
 function disconnect(channel) {
     if (!isConnected()) {
-        channel.send("> :stop_button: I haven't connected to any server yet!\n")
+        channel.send(":octagonal_sign: I haven't connected to any server yet!\n")
         return;
     }
 
@@ -232,8 +238,8 @@ function disconnect(channel) {
         this.connClient.close()
         this.connClient = undefined;
 
-        channel.send("> :stop_button: Disconnected succesfully!")
+        channel.send(":octagonal_sign: Disconnected succesfully!")
     } else {
-        channel.send("> :stop_button: I am connected to the server in <#"+ this.channelId +"> !")
+        channel.send(":octagonal_sign: I am connected to the server in <#"+ this.channelId +"> !")
     }
 }
