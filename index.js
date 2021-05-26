@@ -9,7 +9,7 @@ const config = require('config.json')
 let clients = [];
 let connectedClient = 0;
 
-dsclient.login(config.clientId).catch(() => {
+dsclient.login(config.token).catch(() => {
     console.error("The bot token was incorrect.");
     process.exit();
 });
