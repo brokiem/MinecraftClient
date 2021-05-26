@@ -182,25 +182,27 @@ function connect(channel, address, port, version = "1.16.220") {
 
             clients[channel]['formId'] = packet.form_id;
 
-            let filteredText = jsonData.content;
-            for (let i = 0; i < jsonData.content.length; i++) {
-                filteredText = filteredText.split('§' + string[i]).join('');
-            }
-
-            let text = ":arrow_lower_right: **ModalFormRequestPacket received**\n\nForm ID: " + packet.form_id + "\n\n           " + jsonData.title + "\n" + filteredText + "\n\n";
-
             if (packet.type === 'form') {
-                let buttonId = 0;
-                let buttons = [];
-                jsonData.buttons.forEach((fn) => {
-                    buttons.push("ID: " + buttonId + " | Button: " + fn.text + "");
+                let filteredText = jsonData.content;
+                for (let i = 0; i < jsonData.content.length; i++) {
+                    filteredText = filteredText.split('§' + string[i]).join('');
+                }
 
-                    buttonId++;
-                })
+                let text = ":arrow_lower_right: **ModalFormRequestPacket received**\n\nForm ID: " + packet.form_id + "\n\n           " + jsonData.title + "\n" + filteredText + "\n\n";
 
-                channel.send(makeEmbed(text + "```" + buttons.join("\n") + "```" + "\nType ( *form <button id> ) to response"));
+                if (packet.type === 'form') {
+                    let buttonId = 0;
+                    let buttons = [];
+                    jsonData.buttons.forEach((fn) => {
+                        buttons.push("ID: " + buttonId + " | Button: " + fn.text + "");
+
+                        buttonId++;
+                    })
+
+                    channel.send(makeEmbed(text + "```" + buttons.join("\n") + "```" + "\nType ( *form <button id> ) to response"));
+                }
             }
-            //channel.send(":octagonal_sign: I can't handle custom form yet :(");
+            channel.send(":octagonal_sign: I can't handle custom form yet :(");
             if (packet.type !== 'form') {
                 console.log(packet)
             }
