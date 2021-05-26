@@ -199,7 +199,8 @@ function connect(channel, address, port, version = "1.16.220") {
                 channel.send(makeEmbed(text + "```" + buttons.join("\n") + "```" + "\nType ( *form <button id> ) to response"));
             } else {
                 channel.send(":octagonal_sign: I can't handle custom form yet :(");
-                sendModalResponse(channel, "0"); // unhandled
+                channel.send(packet)
+                //sendModalResponse(channel, "0"); // unhandled
             }
         })
 
