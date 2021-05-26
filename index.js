@@ -27,12 +27,23 @@ dsclient.on('message', async message => {
     const channel = message.channel;
 
     switch (command) {
+        case "help":
+            await channel.send(makeEmbed("**Command List**\n\n○ *query <string: address> <int: port></string:>\n○ *join <string: address> <int: port> <string: mcversion>\n○ *chat <string: message>\n○ *form <int: form button id>\n○ *disconnect"));
+            break;
+        case "query":
+            if (args.length > 0) {
+                await channel.send(":signal_strength: Getting query info...")
+                ping(channel, args[0], isNaN(args[1]) ? 19132 : args[1]);
+            } else {
+                await channel.send("[Usage] *query <address> <port>\nExample: *query play.hypixel.net 25565");
+            }
+            break;
         case "connect":
         case "join":
             if (args.length > 0) {
-                connect(message.channel, args[0], isNaN(args[1]) ? 19132 : args[1], args[2] ?? "1.16.220");
+                connect(channel, args[0], isNaN(args[1]) ? 19132 : args[1], args[2] ?? "1.16.220");
             } else {
-                await message.channel.send("[Usage] *connect <address> <port> <version>");
+                await channel.send("[Usage] *connect <address> <port> <version>");
             }
             break;
         case "chat":
@@ -40,26 +51,26 @@ dsclient.on('message', async message => {
             if (isConnected(channel)) {
                 if (args.length > 0) {
                     chat(channel, args.join(" "));
-                    await message.channel.send(":small_red_triangle: Send message success!");
+                    await channel.send(":small_red_triangle: Send message success!");
                 } else {
-                    await message.channel.send(":octagonal_sign: Please enter the message!");
+                    await channel.send(":octagonal_sign: Please enter the message!");
                 }
             } else {
-                await message.channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
+                await channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
             }
             break;
         case "form":
             if (isConnected(channel)) {
                 if (clients[channel]['formId'] !== undefined) {
                     if (args.length > 0) {
-                        await message.channel.send(":small_red_triangle: Sending modal form response");
+                        await channel.send(":small_red_triangle: Sending modal form response");
                         sendModalResponse(channel, args.join(" "));
                     }
                 } else {
-                    await message.channel.send(":octagonal_sign: No ModalFormRequestPacket found!");
+                    await channel.send(":octagonal_sign: No ModalFormRequestPacket found!");
                 }
             } else {
-                await message.channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
+                await channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
             }
             break;
         case "enablechat":
@@ -67,22 +78,42 @@ dsclient.on('message', async message => {
                 if (args.length > 0) {
                     if (args[0] === "true") {
                         clients[channel]['enableChat'] = true;
-                        await message.channel.send(":ballot_box_with_check: Chat successfully enabled");
+                        await channel.send(":ballot_box_with_check: Chat successfully enabled");
                     } else if (args[0] === "false") {
                         clients[channel]['enableChat'] = false;
-                        await message.channel.send(":ballot_box_with_check: Chat successfully disabled");
+                        await channel.send(":ballot_box_with_check: Chat successfully disabled");
                     }
                 }
             }
             break;
         case "close":
         case "disconnect":
-            disconnect(message.channel);
+            disconnect(channel);
             break;
     }
 })
 
-function connect(channel, address, port = 19132, version = "1.16.220") {
+function ping(channel, address, port = 19132) {
+    query.statusBedrock(address, {
+        port: parseInt(port), enableSRV: true, timeout: 3000
+    }).then((response) => {
+        channel.send(makeEmbed("**Query information**\n\n**MOTD**: " + response.motdLine1.descriptionText + "\n**Version**: " + response.version + "\n**Players**: " + response.onlinePlayers + "/" + response.maxPlayers))
+    }).catch(() => {
+        if (port === 19132) {
+            port = 25565
+        }
+
+        query.status(address, {
+            port: parseInt(port), enableSRV: true, timeout: 5000
+        }).then((response) => {
+            channel.send(makeEmbed("**Query information**\n\n**MOTD**: " + response.description.descriptionText + "\n**Version**: " + response.version + "\n**Players**: " + response.onlinePlayers + "/" + response.maxPlayers))
+        }).catch((err) => {
+            channel.send(makeEmbed("Query failed: " + err))
+        })
+    })
+}
+
+function connect(channel, address, port, version = "1.16.220") {
     if (isConnected(channel)) {
         channel.send(":octagonal_sign: I've connected!");
         return;
@@ -106,7 +137,9 @@ function connect(channel, address, port = 19132, version = "1.16.220") {
         channel.send(":newspaper: Started packet reading...");
         client.connect();
 
-        clients[channel]['intervalChat'] = setInterval(function(){sendCachedTextPacket(channel)}, 5000);
+        clients[channel]['intervalChat'] = setInterval(function () {
+            sendCachedTextPacket(channel)
+        }, 5000);
 
         clients[channel].client = client;
 
@@ -190,12 +223,12 @@ function connect(channel, address, port = 19132, version = "1.16.220") {
 
     }).catch((error) => {
         delete clients[channel];
-        channel.send(":octagonal_sign: Unable to connect to [" + address+ "]/"+port+". " + error.message);
+        channel.send(":octagonal_sign: Unable to connect to [" + address + "]/" + port + ". " + error.message);
     });
 }
 
 function sendCachedTextPacket(channel) {
-    if ((clients[channel]['cachedFilteredTextPacket'].length > 0) && clients[channel] !== undefined && clients[channel]['enableChat']) {
+    if (isConnected(channel) && (clients[channel]['cachedFilteredTextPacket'].length > 0) && (clients[channel] !== undefined) && clients[channel]['enableChat']) {
         channel.send(makeEmbed(clients[channel]['cachedFilteredTextPacket'].join("\n\n")))
         clients[channel]['cachedFilteredTextPacket'] = [];
     }
