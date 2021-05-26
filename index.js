@@ -4,17 +4,19 @@ const discord = require('discord.js');
 const dsclient = new discord.Client();
 const {Client} = require('bedrock-protocol');
 const query = require('minecraft-server-util');
+const config = require('config.json')
 
 let clients = [];
+let connectedClient = 0;
 
-dsclient.login("").catch(() => {
+dsclient.login(config.clientId).catch(() => {
     console.error("The bot token was incorrect.");
     process.exit();
 });
 
-dsclient.on("ready", async () => {
-    await dsclient.user.setStatus('online');
-    await dsclient.user.setActivity("Minecraft");
+dsclient.on("ready",  () => {
+    dsclient.user.setStatus('idle');
+    dsclient.user.setActivity("Minecraft");
 
     console.log("Bot ready and online!\n");
 
@@ -33,7 +35,7 @@ dsclient.on('message', async message => {
 
     switch (command) {
         case "help":
-            await channel.send(makeEmbed("**Command List**\n\n○ *query <address> <port>  **--**  Query a Minecraft server\n○ *join <address> <port> <mcversion>  **--**  Join to Minecraft server\n○ *chat <message>  **--**  Send chat to connected server\n○ *form <form button id>  **--**  Send form response to connected server\n○ *disconnect  **--**  Disconnect from connected server\n○ *invite  **--**  Get bot invite link"));
+            await channel.send(makeEmbed("**Command List**\n\n○ *query <address> <port>  **--**  Query a Minecraft server\n○ *join <address> <port>  **--**  Join to Minecraft server\n○ *chat <message>  **--**  Send chat to connected server\n○ *enablechat <value>\n○ *form <button id>  **--**  Send form resp to connected server\n○ *disconnect  **--**  Disconnect from connected server\n○ *invite  **--**  Get bot invite link\n\n**Command Example**\n\n○ *query play.hypixel.net 25565\n○ *join play.nethergames.org 19132\n○ *chat hello world!\n○ *enablechat false\n○ *form 0"));
             break;
         case "query":
             if (args.length > 0) {
@@ -46,9 +48,9 @@ dsclient.on('message', async message => {
         case "connect":
         case "join":
             if (args.length > 0) {
-                connect(channel, args[0], isNaN(args[1]) ? 19132 : args[1], args[2] ?? "1.16.220");
+                connect(channel, args[0], isNaN(args[1]) ? 19132 : args[1]);
             } else {
-                await channel.send("[Usage] *connect <address> <port> <version>");
+                await channel.send("[Usage] *connect <address> <port>");
             }
             break;
         case "chat":
@@ -98,7 +100,7 @@ dsclient.on('message', async message => {
         case "invite":
         case "stats":
         case "status":
-            await channel.send(makeEmbed("Bot Invite Link: [Click here](https://discord.com/api/oauth2/authorize?client_id=844733770581803018&permissions=2048&scope=bot)\n\nRAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB\nUptime: " + getUptime() + "\n\nServer Invited: " + dsclient.guilds.cache.size));
+            await channel.send(makeEmbed("Bot Invite Link: [Click here](https://discord.com/api/oauth2/authorize?client_id=844733770581803018&permissions=2048&scope=bot)\n\nRAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB\nUptime: " + getUptime() + "\n\nClients Connected: " + connectedClient + "\nServer Invited: " + dsclient.guilds.cache.size));
             break;
     }
 })
@@ -155,11 +157,14 @@ function connect(channel, address, port, version = "1.16.220") {
             sendCachedTextPacket(channel)
         }, 5000);
         clients[channel]['maxTimeConnectedTimeout'] = setTimeout(function () {
-            channel.send(":octagonal_sign: Disconnected because automatically disconnected every 10 minutes")
-            disconnect(channel);
+            if (isConnected(channel)) {
+                channel.send(":octagonal_sign: Disconnected because automatically disconnected every 10 minutes")
+                disconnect(channel);
+            }
         }, 600000)
 
         clients[channel]['client'] = client;
+        connectedClient++;
 
         client.on('start_game', (packet) => {
             this.runtime_id = packet.runtime_id;
@@ -246,7 +251,7 @@ function connect(channel, address, port, version = "1.16.220") {
 }
 
 function checkMaxClient(channel) {
-    if (clients.length > 10) {
+    if (connectedClient > 10) {
         channel.send(makeEmbed("Clients are too busy! Please try again later."));
         return true;
     }
@@ -295,7 +300,9 @@ function disconnect(channel) {
     }
 
     clearInterval(clients[channel]['intervalChat'])
+    clearTimeout(clients[channel]['maxTimeConnectedTimeout'])
     clients[channel]['client'].close()
+    connectedClient--;
     channel.send(":octagonal_sign: Disconnected succesfully!");
 }
 
