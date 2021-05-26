@@ -4,7 +4,7 @@ const discord = require('discord.js');
 const dsclient = new discord.Client();
 const {Client} = require('bedrock-protocol');
 const query = require('minecraft-server-util');
-const config = require('config.json')
+const config = require('./config.json')
 
 let clients = [];
 let connectedClient = 0;
