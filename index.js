@@ -106,7 +106,7 @@ function connect(channel, address, port = 19132, version = "1.16.220") {
         channel.send(":newspaper: Started packet reading...");
         client.connect();
 
-        setInterval(function(){sendCachedTextPacket(channel)}, 5000);
+        clients[channel]['intervalChat'] = setInterval(function(){sendCachedTextPacket(channel)}, 5000);
 
         clients[channel].client = client;
 
@@ -228,17 +228,13 @@ function isConnected(channel) {
     return clients[channel] !== undefined;
 }
 
-function disconnect(channelD) {
-    if (!isConnected(channelD)) {
-        channelD.send(":octagonal_sign: I haven't connected to any server yet!\n");
+function disconnect(channel) {
+    if (!isConnected(channel)) {
+        channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
         return;
     }
 
-    if (clients[channelD].id === channelD.id) {
-        clients[channelD]['client'].close()
-
-        channelD.send(":octagonal_sign: Disconnected succesfully!");
-    } else {
-        channelD.send(":octagonal_sign: I am connected!");
-    }
+    clearInterval(clients[channel]['intervalChat'])
+    clients[channel]['client'].close()
+    channel.send(":octagonal_sign: Disconnected succesfully!");
 }
