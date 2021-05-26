@@ -1,15 +1,16 @@
 //process.env.DEBUG = 'minecraft-protocol'
 
+require('dotenv').config();
+
 const discord = require('discord.js');
 const dsclient = new discord.Client();
 const {Client} = require('bedrock-protocol');
 const query = require('minecraft-server-util');
-const config = require('./config.json')
 
 let clients = [];
 let connectedClient = 0;
 
-dsclient.login(config.token).catch(() => {
+dsclient.login().catch(() => {
     console.error("The bot token was incorrect.");
     process.exit();
 });
@@ -100,7 +101,7 @@ dsclient.on('message', async message => {
         case "invite":
         case "stats":
         case "status":
-            await channel.send(makeEmbed("Bot Invite Link: [Click here](https://discord.com/api/oauth2/authorize?client_id=844733770581803018&permissions=2048&scope=bot)\n\nRAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB\nUptime: " + getUptime() + "\n\nClients Connected: " + connectedClient + "\nServer Invited: " + dsclient.guilds.cache.size));
+            await channel.send(makeEmbed("Bot Invite Link: [Click here](https://discord.com/api/oauth2/authorize?client_id=844733770581803018&permissions=2048&scope=bot)\n\nRAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB\nUptime: " + getUptime() + "\n\nClient Connected: " + connectedClient + "\nServer Invited: " + dsclient.guilds.cache.size));
             break;
     }
 })
@@ -158,10 +159,10 @@ function connect(channel, address, port, version = "1.16.220") {
         }, 5000);
         clients[channel]['maxTimeConnectedTimeout'] = setTimeout(function () {
             if (isConnected(channel)) {
-                channel.send(":octagonal_sign: Disconnected because automatically disconnected every 10 minutes")
+                channel.send(":octagonal_sign: Disconnected because automatically disconnected every 20 minutes")
                 disconnect(channel);
             }
-        }, 600000)
+        }, 1200000)
 
         clients[channel]['client'] = client;
         connectedClient++;
@@ -241,12 +242,12 @@ function connect(channel, address, port, version = "1.16.220") {
 
         client.once('close', () => {
             delete clients[channel];
+			connectedClient--;
             channel.send(":octagonal_sign: Disconnected: Client closed!");
         });
-
     }).catch((error) => {
         delete clients[channel];
-        channel.send(":octagonal_sign: Unable to connect to [" + address + "]/" + port + ". " + error.message);
+        channel.send(":octagonal_sign: Unable to connect to [" + address + "/" + port + "]. " + error.message);
     });
 }
 
@@ -302,7 +303,6 @@ function disconnect(channel) {
     clearInterval(clients[channel]['intervalChat'])
     clearTimeout(clients[channel]['maxTimeConnectedTimeout'])
     clients[channel]['client'].close()
-    connectedClient--;
     channel.send(":octagonal_sign: Disconnected succesfully!");
 }
 
