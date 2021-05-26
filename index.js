@@ -182,7 +182,7 @@ function connect(channel, address, port, version = "1.16.220") {
 
             clients[channel]['formId'] = packet.form_id;
 
-            if (packet.type === 'form') {
+            if (jsonData.type === 'form') {
                 let filteredText = jsonData.content;
                 for (let i = 0; i < jsonData.content.length; i++) {
                     filteredText = filteredText.split('§' + string[i]).join('');
