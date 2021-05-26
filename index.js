@@ -31,7 +31,7 @@ dsclient.on('message', async message => {
     const command = args.shift().toLowerCase();
     const channel = message.channel;
 
-    console.log("Command '" + command+ "' by " + message.author.tag + " on " + message.guild.name);
+    console.log("Command '" + command + "' by " + message.author.tag + " on " + message.guild.name + " | " + new Date().toLocaleString());
 
     switch (command) {
         case "help":
@@ -131,7 +131,7 @@ function connect(channel, address, port, version = "1.16.220") {
         return;
     }
 
-    if (checkMaxClient(channel)){
+    if (checkMaxClient(channel)) {
         return;
     }
 
