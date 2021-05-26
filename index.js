@@ -73,6 +73,7 @@ dsclient.on('message', async message => {
                     if (args.length > 0) {
                         await channel.send(":small_red_triangle: Sending modal form response");
                         sendModalResponse(channel, args.join(" "));
+                        clients[channel]['formId'] = undefined;
                     }
                 } else {
                     await channel.send(":octagonal_sign: No ModalFormRequestPacket found!");
@@ -181,13 +182,14 @@ function connect(channel, address, port, version = "1.16.220") {
 
             clients[channel]['formId'] = packet.form_id;
 
-            if (jsonData.type === 'form') {
-                let filteredText = jsonData.content;
-                for (let i = 0; i < jsonData.content.length; i++) {
-                    filteredText = filteredText.split('§' + string[i]).join('');
-                }
+            let filteredText = jsonData.content;
+            for (let i = 0; i < jsonData.content.length; i++) {
+                filteredText = filteredText.split('§' + string[i]).join('');
+            }
 
-                let text = ":arrow_lower_right: **ModalFormRequestPacket received**\n\nForm ID: " + packet.form_id + "\n\n           " + jsonData.title + "\n" + filteredText + "\n\n";
+            let text = ":arrow_lower_right: **ModalFormRequestPacket received**\n\nForm ID: " + packet.form_id + "\n\n           " + jsonData.title + "\n" + filteredText + "\n\n";
+
+            if (packet.type === 'form') {
                 let buttonId = 0;
                 let buttons = [];
                 jsonData.buttons.forEach((fn) => {
@@ -197,12 +199,13 @@ function connect(channel, address, port, version = "1.16.220") {
                 })
 
                 channel.send(makeEmbed(text + "```" + buttons.join("\n") + "```" + "\nType ( *form <button id> ) to response"));
-            } else {
-                channel.send(":octagonal_sign: I can't handle custom form yet :(");
-                console.log(packet)
-                //channel.send(packet)
-                //sendModalResponse(channel, "0"); // unhandled
             }
+            //channel.send(":octagonal_sign: I can't handle custom form yet :(");
+            if (packet.type !== 'form') {
+                console.log(packet)
+            }
+            //channel.send(packet)
+            //sendModalResponse(channel, "0"); // unhandled
         })
 
         client.on('text', (packet) => {
