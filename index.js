@@ -203,7 +203,7 @@ function connect(channel, address, port, version = "1.16.220") {
                 channel.send(":octagonal_sign: I can't handle custom form yet :(");
             }
 
-            if (packet.type !== 'form') {
+            if (jsonData.type !== 'form') {
                 console.log(packet)
             }
             //channel.send(packet)
