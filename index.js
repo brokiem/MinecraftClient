@@ -1,4 +1,4 @@
-process.env.DEBUG = 'minecraft-protocol'
+//process.env.DEBUG = 'minecraft-protocol'
 
 const discord = require('discord.js');
 const dsclient = new discord.Client();
@@ -24,6 +24,7 @@ dsclient.on('message', async message => {
 
     const args = message.content.slice(1).trim().split(/ +/);
     const command = args.shift().toLowerCase();
+    const channel = message.channel;
 
     switch (command) {
         case "connect":
@@ -36,9 +37,9 @@ dsclient.on('message', async message => {
             break;
         case "chat":
         case "message":
-            if (isConnected()) {
+            if (isConnected(channel)) {
                 if (args.length > 0) {
-                    chat(args.join(" "));
+                    chat(channel, args.join(" "));
                     await message.channel.send(":small_red_triangle: Send message success!");
                 } else {
                     await message.channel.send(":octagonal_sign: Please enter the message!");
@@ -48,11 +49,11 @@ dsclient.on('message', async message => {
             }
             break;
         case "form":
-            if (isConnected()) {
-                if (formId !== undefined) {
+            if (isConnected(channel)) {
+                if (clients[channel]['formId'] !== undefined) {
                     if (args.length > 0) {
                         await message.channel.send(":small_red_triangle: Sending modal form response");
-                        sendModalResponse(args.join(" "));
+                        sendModalResponse(channel, args.join(" "));
                     }
                 } else {
                     await message.channel.send(":octagonal_sign: No ModalFormRequestPacket found!");
@@ -62,13 +63,13 @@ dsclient.on('message', async message => {
             }
             break;
         case "enablechat":
-            if (isConnected()) {
+            if (isConnected(channel)) {
                 if (args.length > 0) {
                     if (args[0] === "true") {
-                        enableChat = true;
+                        clients[channel]['enableChat'] = true;
                         await message.channel.send(":ballot_box_with_check: Chat successfully enabled");
                     } else if (args[0] === "false") {
-                        enableChat = false;
+                        clients[channel]['enableChat'] = false;
                         await message.channel.send(":ballot_box_with_check: Chat successfully disabled");
                     }
                 }
@@ -81,17 +82,15 @@ dsclient.on('message', async message => {
     }
 })
 
-let enableChat = true;
-let formId;
 function connect(channel, address, port = 19132, version = "1.16.220") {
-    if (isConnected()) {
-        channel.send(":octagonal_sign: I've connected to the server in <#" + this.channelId + "> !");
+    if (isConnected(channel)) {
+        channel.send(":octagonal_sign: I've connected!");
         return;
     }
 
     channel.send(":airplane: Connecting to " + address + " on port " + port);
 
-    this.channelId = channel.id;
+    clients[channel] = {'enableChat': true, 'cachedFilteredTextPacket': []}
 
     query.statusBedrock(address, {
         port: parseInt(port), enableSRV: true, timeout: 5000
@@ -109,7 +108,7 @@ function connect(channel, address, port = 19132, version = "1.16.220") {
 
         setInterval(function(){sendCachedTextPacket(channel)}, 5000);
 
-        this.connClient = client;
+        clients[channel].client = client;
 
         client.on('start_game', (packet) => {
             this.runtime_id = packet.runtime_id;
@@ -123,7 +122,7 @@ function connect(channel, address, port = 19132, version = "1.16.220") {
             const jsonData = JSON.parse(packet.data);
             const string = "abcdefgklmr0123456789"; // minecraft color
 
-            formId = packet.form_id;
+            clients[channel].formId = packet.form_id;
 
             if (jsonData.type === 'form') {
                 let filteredText = jsonData.content;
@@ -143,22 +142,20 @@ function connect(channel, address, port = 19132, version = "1.16.220") {
                 channel.send(makeEmbed(text + "```" + buttons.join("\n") + "```" + "\nType ( *form <button id> ) to response"));
             } else {
                 channel.send(":octagonal_sign: I can't handle custom form yet :(");
-                sendModalResponse("0"); // unhandled
+                sendModalResponse(channel, "0"); // unhandled
             }
         })
 
-        this.cachedFilteredTextPacket = [];
-        let filteredTextPacket;
         client.on('text', (packet) => {
-            if (enableChat) {
+            if (clients[channel]['enableChat']) {
                 const string = "abcdefgklmr0123456789";
 
-                filteredTextPacket = packet.message;
-                if (filteredTextPacket !== undefined) {
+                clients[channel]['filteredTextPacket'] = packet.message;
+                if (clients[channel]['filteredTextPacket'] !== undefined) {
                     for (let i = 0; i < string.length; i++) {
-                        filteredTextPacket = filteredTextPacket.split('§' + string[i]).join('').replace('discord', 'shit');
+                        clients[channel]['filteredTextPacket'] = clients[channel]['filteredTextPacket'].split('§' + string[i]).join('').replace('discord', 'shit');
                     }
-                    this.cachedFilteredTextPacket.push(filteredTextPacket);
+                    clients[channel]['cachedFilteredTextPacket'].push(clients[channel]['filteredTextPacket']);
                 }
             }
         })
@@ -182,25 +179,25 @@ function connect(channel, address, port = 19132, version = "1.16.220") {
         });
 
         client.once('disconnect', (packet) => {
-            this.channelId = undefined;
+            delete clients[channel];
             channel.send(":octagonal_sign: Disconnected from server:\n```" + packet.message + "```");
         });
 
         client.once('close', () => {
-            this.channelId = undefined;
+            delete clients[channel];
             channel.send(":octagonal_sign: Disconnected: Client closed!");
         });
 
     }).catch((error) => {
-        this.channelId = undefined;
+        delete clients[channel];
         channel.send(":octagonal_sign: Unable to connect to [" + address+ "]/"+port+". " + error.message);
     });
 }
 
 function sendCachedTextPacket(channel) {
-    if ((this.cachedFilteredTextPacket.length > 0) && this.channelId !== undefined && enableChat) {
-        channel.send(makeEmbed(this.cachedFilteredTextPacket.join("\n\n")))
-        this.cachedFilteredTextPacket = [];
+    if ((clients[channel]['cachedFilteredTextPacket'].length > 0) && clients[channel] !== undefined && clients[channel]['enableChat']) {
+        channel.send(makeEmbed(clients[channel]['cachedFilteredTextPacket'].join("\n\n")))
+        clients[channel]['cachedFilteredTextPacket'] = [];
     }
 }
 
@@ -208,15 +205,15 @@ function makeEmbed(string) {
     return new discord.MessageEmbed().setDescription(string);
 }
 
-function sendModalResponse(string) {
-    this.connClient.queue('modal_form_response', {
-        form_id: formId,
+function sendModalResponse(channel, string) {
+    clients[channel]['client'].queue('modal_form_response', {
+        form_id: clients[channel]['formId'],
         data: string
     });
 }
 
-function chat(string) {
-    this.connClient.queue('text', {
+function chat(channel, string) {
+    clients[channel]['client'].queue('text', {
         type: 'chat',
         needs_translation: false,
         source_name: string,
@@ -227,22 +224,21 @@ function chat(string) {
     });
 }
 
-function isConnected() {
-    return this.connClient !== undefined && this.channelId !== undefined;
+function isConnected(channel) {
+    return clients[channel] !== undefined;
 }
 
-function disconnect(channel) {
-    if (!isConnected()) {
-        channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
+function disconnect(channelD) {
+    if (!isConnected(channelD)) {
+        channelD.send(":octagonal_sign: I haven't connected to any server yet!\n");
         return;
     }
 
-    if (this.channelId === channel.id) {
-        this.connClient.close()
-        this.connClient = undefined;
+    if (clients[channelD].id === channelD.id) {
+        clients[channelD]['client'].close()
 
-        channel.send(":octagonal_sign: Disconnected succesfully!");
+        channelD.send(":octagonal_sign: Disconnected succesfully!");
     } else {
-        channel.send(":octagonal_sign: I am connected to the server in <#"+ this.channelId +"> !");
+        channelD.send(":octagonal_sign: I am connected!");
     }
 }
