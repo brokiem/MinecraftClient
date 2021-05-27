@@ -2,7 +2,7 @@
   "name": "minecraftclient-discord",
   "version": "1.0.0",
   "dependencies": {
-    "bedrock-protocol": "github:extremeheat/bedrock-protocol#posfix",
+    "bedrock-protocol": "github:brokiem/bedrock-protocol#master",
     "discord.js": "^12.5.3",
     "dotenv": "^10.0.0",
     "minecraft-server-util": "3.4.4"
