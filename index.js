@@ -204,7 +204,6 @@ function connect(channel, address, port, version = "1.16.220") {
             }
 
             console.log(packet)
-            //channel.send(packet)
             //sendModalResponse(channel, "0"); // unhandled
         })
 
