@@ -41,7 +41,7 @@ dsclient.on('message', async message => {
             case "debug":
                 if (message.author.id === '548120702373593090') {
                     debug = !debug;
-                    await channel.send('Debug enabled');
+                    await channel.send('Debug successfully ' + (debug ? "enabled" : "disabled"));
                 }
                 break;
             case "help":
