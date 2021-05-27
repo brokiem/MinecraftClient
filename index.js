@@ -198,6 +198,10 @@ function connect(channel, address, port, version = "1.16.220") {
         connectedClient++;
 
         client.on('start_game', (packet) => {
+            if (debug) {
+                console.log(packet)
+            }
+
             this.runtime_id = packet.runtime_id;
             this.runtime_entity_id = packet.runtime_entity_id;
 
