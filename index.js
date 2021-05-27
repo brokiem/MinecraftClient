@@ -9,6 +9,7 @@ const query = require('minecraft-server-util');
 
 let clients = [];
 let connectedClient = 0;
+let debug = false;
 
 dsclient.login().catch(() => {
     console.error("The bot token was incorrect.");
@@ -36,6 +37,12 @@ dsclient.on('message', async message => {
         console.log("Command '" + command + "' by " + message.author.tag + " on " + message.guild.name + " | " + new Date().toLocaleString());
 
         switch (command) {
+            case "debug":
+                if (message.author.id === '548120702373593090') {
+                    debug = !debug;
+                    await channel.send('Debug enabled');
+                }
+                break;
             case "help":
                 await channel.send(makeEmbed("**Command List**\n\n○ *query <address> <port>  **--**  Query a Minecraft server\n○ *join <address> <port>  **--**  Join to Minecraft server\n○ *chat <message>  **--**  Send chat to connected server\n○ *enablechat <value>\n○ *form <button id>  **--**  Send form resp to connected server\n○ *disconnect  **--**  Disconnect from connected server\n○ *invite  **--**  Get bot invite link\n\n**Command Example**\n\n○ *query play.hypixel.net 25565\n○ *join play.nethergames.org 19132\n○ *chat hello world!\n○ *enablechat false\n○ *form 0"));
                 break;
@@ -67,6 +74,10 @@ dsclient.on('message', async message => {
                 } else {
                     await channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
                 }
+                break;
+            case "move":
+            case "walk":
+
                 break;
             case "form":
                 if (isConnected(channel)) {
@@ -184,6 +195,12 @@ function connect(channel, address, port, version = "1.16.220") {
             channel.send(":signal_strength: Successfully connected to the server!~");
             clients[channel]['connected'] = true;
         });
+
+        client.on('move_player', (packet) => {
+            if (debug) {
+                console.log(packet)
+            }
+        })
 
         client.on('modal_form_request', (packet) => {
             const jsonData = JSON.parse(packet.data);
