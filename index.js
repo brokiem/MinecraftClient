@@ -10,8 +10,8 @@ const query = require('minecraft-server-util');
 let clients = [];
 let connectedClient = 0;
 let debug = false;
-let player_position;
-let walking = false;
+let player_position = [];
+let walking = [];
 
 dsclient.login().catch(() => {
     console.error("The bot token was incorrect.");
@@ -198,7 +198,7 @@ function connect(channel, address, port, version = "1.16.220") {
         client.on('start_game', (packet) => {
             this.runtime_id = packet.runtime_id;
             this.runtime_entity_id = packet.runtime_entity_id;
-            player_position = packet.spawn_position;
+            player_position[channel] = packet.spawn_position;
 
             client.queue('set_local_player_as_initialized', {runtime_entity_id: this.runtime_entity_id});
             channel.send(":signal_strength: Successfully connected to the server!~");
@@ -317,23 +317,23 @@ function sendModalResponse(channel, string) {
 }
 
 function move(channel) {
-    if (walking) {
+    if (walking[channel] !== undefined && walking[channel]) {
         channel.send(":octagonal_sign: Please wait 10 seconds before walking again!");
         return;
     }
 
-    walking = true;
-    player_position = {x: player_position.x + rand(-10, 10), y: player_position.y, z: player_position.z + rand(-20, 20)}
+    walking[channel] = true;
+    player_position[channel] = {x: player_position[channel].x + rand(-10, 10), y: player_position[channel].y, z: player_position[channel].z + rand(-20, 20)}
 
-    channel.send(makeEmbed(":ski: Walking randomly to X:" + player_position.x + " Y:" + player_position.y + " Z:" + player_position.z))
+    channel.send(makeEmbed(":ski: Walking randomly to X:" + player_position[channel].x + " Y:" + player_position[channel].y + " Z:" + player_position[channel].z))
 
     setTimeout(function () {
-        walking = false;
+        walking[channel] = false;
     }, 10000)
 
     clients[channel]['client'].queue('move_player', {
         runtime_id: this.runtime_id,
-        position: player_position,
+        position: player_position[channel],
         pitch: 0,
         yaw: 0,
         head_yaw: 0,
