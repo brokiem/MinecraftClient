@@ -316,9 +316,9 @@ function sendModalResponse(channel, string) {
 }
 
 function move(channel) {
-    player_position = {x: player_position.x + rand(-1, 1), y: player_position.y, z: player_position.z + rand(-1, 1)}
+    player_position = {x: player_position.x + rand(-10, 10), y: player_position.y, z: player_position.z + rand(-20, 20)}
 
-    channel.send(makeEmbed(":man_walking: Walking randomly to X: " + player_position.x + " Y:" + player_position.y + " Z: " + player_position.z))
+    channel.send(makeEmbed(":ski: Walking randomly to X:" + player_position.x + " Y:" + player_position.y + " Z:" + player_position.z))
 
     clients[channel]['client'].queue('move_player', {
         runtime_id: this.runtime_id,
@@ -330,7 +330,7 @@ function move(channel) {
         on_ground: true,
         ridden_runtime_id: 0,
         teleport: { cause: 'unknown', source_entity_type: 0 },
-        tick: 0n
+        tick: 200n
     })
 }
 
