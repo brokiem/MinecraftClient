@@ -10,6 +10,7 @@ const query = require('minecraft-server-util');
 let clients = [];
 let connectedClient = 0;
 let debug = false;
+let player_position;
 
 dsclient.login().catch(() => {
     console.error("The bot token was incorrect.");
@@ -198,29 +199,14 @@ function connect(channel, address, port, version = "1.16.220") {
         connectedClient++;
 
         client.on('start_game', (packet) => {
-            if (debug) {
-                console.log(packet)
-            }
-
             this.runtime_id = packet.runtime_id;
             this.runtime_entity_id = packet.runtime_entity_id;
+            player_position = packet.spawn_position;
 
             client.queue('set_local_player_as_initialized', {runtime_entity_id: this.runtime_entity_id});
             channel.send(":signal_strength: Successfully connected to the server!~");
             clients[channel]['connected'] = true;
         });
-
-        client.on('move_player', (packet) => {
-            if (debug) {
-                console.log(packet)
-            }
-        })
-
-        client.on('add_player', (packet) => {
-            if (debug) {
-                console.log(packet)
-            }
-        })
 
         client.on('modal_form_request', (packet) => {
             const jsonData = JSON.parse(packet.data);
@@ -334,9 +320,11 @@ function sendModalResponse(channel, string) {
 }
 
 function move(channel, string) {
+    player_position = {x: player_position.x + 1, y: player_position.y, z: player_position.z + 1}
+
     clients[channel]['client'].queue('move_player', {
         runtime_id: this.runtime_id,
-        position: {},
+        position: player_position,
         pitch: 0,
         yaw: 0,
         head_yaw: 0,
