@@ -318,18 +318,18 @@ function sendModalResponse(channel, string) {
 
 function move(channel) {
     if (walking[channel] !== undefined && walking[channel]) {
-        channel.send(":octagonal_sign: Please wait 10 seconds before walking again!");
+        channel.send(":octagonal_sign: Please wait 2 seconds before walking again!");
         return;
     }
 
     walking[channel] = true;
-    player_position[channel] = {x: player_position[channel].x + rand(-10, 10), y: player_position[channel].y, z: player_position[channel].z + rand(-20, 20)}
+    player_position[channel] = {x: player_position[channel].x + rand(-2, 2), y: player_position[channel].y, z: player_position[channel].z + rand(-2, 2)}
 
     channel.send(makeEmbed(":ski: Walking randomly to X:" + player_position[channel].x + " Y:" + player_position[channel].y + " Z:" + player_position[channel].z))
 
     setTimeout(function () {
         walking[channel] = false;
-    }, 10000)
+    }, 2000)
 
     clients[channel]['client'].queue('move_player', {
         runtime_id: this.runtime_id,
@@ -337,11 +337,11 @@ function move(channel) {
         pitch: 0,
         yaw: 0,
         head_yaw: 0,
-        mode: 'teleport',
+        mode: 'normal',
         on_ground: true,
         ridden_runtime_id: 0,
         teleport: { cause: 'unknown', source_entity_type: 0 },
-        tick: 200n
+        tick: 0n
     })
 }
 
