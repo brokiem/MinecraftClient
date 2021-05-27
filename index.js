@@ -79,8 +79,8 @@ dsclient.on('message', async message => {
             case "move":
             case "walk":
                 if (isConnected(channel)) {
-                    move(channel, args.join(" "));
                     await channel.send(":small_red_triangle: Walking...");
+                    move(channel);
                 } else {
                     await channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
                 }
@@ -315,10 +315,10 @@ function sendModalResponse(channel, string) {
     });
 }
 
-function move(channel, string) {
+function move(channel) {
     player_position = {x: player_position.x + rand(-1, 1), y: player_position.y, z: player_position.z + rand(-1, 1)}
 
-    channel.send(makeEmbed(":man_walking: Walking to X: " + player_position.x + " Y:" + player_position.y + " Z: " + player_position.z))
+    channel.send(makeEmbed(":man_walking: Walking randomly to X: " + player_position.x + " Y:" + player_position.y + " Z: " + player_position.z))
 
     clients[channel]['client'].queue('move_player', {
         runtime_id: this.runtime_id,
