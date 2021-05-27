@@ -11,6 +11,7 @@ let clients = [];
 let connectedClient = 0;
 let debug = false;
 let player_position;
+let walking = false;
 
 dsclient.login().catch(() => {
     console.error("The bot token was incorrect.");
@@ -316,9 +317,19 @@ function sendModalResponse(channel, string) {
 }
 
 function move(channel) {
+    if (walking) {
+        channel.send(":octagonal_sign: Please wait 10 seconds before walking again!");
+        return;
+    }
+
+    walking = true;
     player_position = {x: player_position.x + rand(-10, 10), y: player_position.y, z: player_position.z + rand(-20, 20)}
 
     channel.send(makeEmbed(":ski: Walking randomly to X:" + player_position.x + " Y:" + player_position.y + " Z:" + player_position.z))
+
+    setTimeout(function () {
+        walking = false;
+    }, 10000)
 
     clients[channel]['client'].queue('move_player', {
         runtime_id: this.runtime_id,
