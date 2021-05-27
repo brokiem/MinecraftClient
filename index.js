@@ -102,7 +102,7 @@ dsclient.on('message', async message => {
         case "invite":
         case "stats":
         case "status":
-            await channel.send(makeEmbed("Bot Invite Link: [Click here](https://discord.com/api/oauth2/authorize?client_id=844733770581803018&permissions=3072&scope=bot)\n\nRAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB\nUptime: " + getUptime() + "\n\nClient Connected: " + connectedClient + "\nServer Invited: " + dsclient.guilds.cache.size));
+            await channel.send(makeEmbed("Bot Invite Link: [Click here](https://discord.com/api/oauth2/authorize?client_id=844733770581803018&permissions=2048&scope=bot)\n\nRAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB\nUptime: " + getUptime() + "\n\nClient Connected: " + connectedClient + "\nServer Invited: " + dsclient.guilds.cache.size));
             break;
     }
 })
