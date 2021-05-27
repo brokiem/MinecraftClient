@@ -221,6 +221,12 @@ function connect(channel, address, port, version = "1.16.220") {
             }
         })
 
+        client.on('transfer', (packet) => {
+            channel.send(makeEmbed(":arrow_lower_right: **TransferPacket received**\n\nAddress: " + packet.server_address + "\nPort: " + packet.port))
+            disconnect(channel, false)
+            connect(channel, packet.server_address, packet.port)
+        })
+
         client.once('resource_packs_info', () => {
             client.write('resource_pack_client_response', {
                 response_status: 'completed',
@@ -298,7 +304,7 @@ function isConnected(channel) {
     return clients[channel] !== undefined;
 }
 
-function disconnect(channel) {
+function disconnect(channel, showMessage = true) {
     if (!isConnected(channel)) {
         channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
         return;
@@ -307,7 +313,10 @@ function disconnect(channel) {
     clearInterval(clients[channel]['intervalChat'])
     clearTimeout(clients[channel]['maxTimeConnectedTimeout'])
     clients[channel]['client'].close()
-    channel.send(":octagonal_sign: Disconnected succesfully!");
+
+    if (showMessage) {
+        channel.send(":octagonal_sign: Disconnected succesfully!");
+    }
 }
 
 function getUptime() {
