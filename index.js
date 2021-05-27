@@ -128,7 +128,7 @@ function ping(channel, address, port = 19132) {
 }
 
 function connect(channel, address, port, version = "1.16.220") {
-    if (isConnected(channel)) {
+    if (isConnected(channel, false)) {
         channel.send(":octagonal_sign: I've connected!");
         return;
     }
@@ -139,7 +139,7 @@ function connect(channel, address, port, version = "1.16.220") {
 
     channel.send(":airplane: Connecting to " + address + " on port " + port);
 
-    clients[channel] = {'enableChat': true, 'cachedFilteredTextPacket': []}
+    clients[channel] = {'connected': false, 'enableChat': true, 'cachedFilteredTextPacket': []}
 
     query.statusBedrock(address, {
         port: parseInt(port), enableSRV: true, timeout: 5000
@@ -159,7 +159,7 @@ function connect(channel, address, port, version = "1.16.220") {
             sendCachedTextPacket(channel)
         }, 5000);
         clients[channel]['maxTimeConnectedTimeout'] = setTimeout(function () {
-            if (isConnected(channel)) {
+            if (isConnected(channel, false)) {
                 channel.send(":octagonal_sign: Disconnected because automatically disconnected every 20 minutes")
                 disconnect(channel);
             }
@@ -174,6 +174,7 @@ function connect(channel, address, port, version = "1.16.220") {
 
             client.queue('set_local_player_as_initialized', {runtime_entity_id: this.runtime_entity_id});
             channel.send(":signal_strength: Successfully connected to the server!~");
+            clients[channel]['connected'] = true;
         });
 
         client.on('modal_form_request', (packet) => {
@@ -246,7 +247,6 @@ function connect(channel, address, port, version = "1.16.220") {
         });
 
         client.once('disconnect', (packet) => {
-            delete clients[channel];
             channel.send(":octagonal_sign: Disconnected from server:\n```" + packet.message + "```");
         });
 
@@ -271,7 +271,7 @@ function checkMaxClient(channel) {
 }
 
 function sendCachedTextPacket(channel) {
-    if (isConnected(channel) && (clients[channel]['cachedFilteredTextPacket'].length > 0) && (clients[channel] !== undefined) && clients[channel]['enableChat']) {
+    if (isConnected(channel, false) && (clients[channel]['cachedFilteredTextPacket'].length > 0) && (clients[channel] !== undefined) && clients[channel]['enableChat']) {
         channel.send(makeEmbed(clients[channel]['cachedFilteredTextPacket'].join("\n\n")))
         clients[channel]['cachedFilteredTextPacket'] = [];
     }
@@ -300,12 +300,16 @@ function chat(channel, string) {
     });
 }
 
-function isConnected(channel) {
+function isConnected(channel, check = true) {
+    if (check) {
+        return clients[channel] !== undefined && clients[channel]['connected']
+    }
+
     return clients[channel] !== undefined;
 }
 
 function disconnect(channel, showMessage = true) {
-    if (!isConnected(channel)) {
+    if (!isConnected(channel, false)) {
         channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
         return;
     }
