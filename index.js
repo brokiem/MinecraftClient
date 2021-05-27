@@ -156,6 +156,7 @@ function connect(channel, address, port, version = "1.16.220") {
         return;
     }
 
+    console.log("Connecting to " + address + " on port " + port)
     channel.send(":airplane: Connecting to " + address + " on port " + port);
 
     clients[channel] = {'connected': false, 'enableChat': true, 'cachedFilteredTextPacket': []}
