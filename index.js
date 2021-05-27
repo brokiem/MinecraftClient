@@ -77,7 +77,16 @@ dsclient.on('message', async message => {
                 break;
             case "move":
             case "walk":
-
+                if (isConnected(channel)) {
+                    if (args.length > 0) {
+                        move(channel, args.join(" "));
+                        await channel.send(":small_red_triangle: Walking...");
+                    } else {
+                        await channel.send(":octagonal_sign: Please enter the message!");
+                    }
+                } else {
+                    await channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
+                }
                 break;
             case "form":
                 if (isConnected(channel)) {
@@ -183,7 +192,7 @@ function connect(channel, address, port, version = "1.16.220") {
                 channel.send(":octagonal_sign: Disconnected because automatically disconnected every 20 minutes")
                 disconnect(channel);
             }
-        }, 1200000)
+        }, 1200000);
 
         clients[channel]['client'] = client;
         connectedClient++;
@@ -198,6 +207,12 @@ function connect(channel, address, port, version = "1.16.220") {
         });
 
         client.on('move_player', (packet) => {
+            if (debug) {
+                console.log(packet)
+            }
+        })
+
+        client.on('add_player', (packet) => {
             if (debug) {
                 console.log(packet)
             }
@@ -312,6 +327,21 @@ function sendModalResponse(channel, string) {
         form_id: clients[channel]['formId'],
         data: string
     });
+}
+
+function move(channel, string) {
+    clients[channel]['client'].queue('move_player', {
+        runtime_id: this.runtime_id,
+        position: {},
+        pitch: 0,
+        yaw: 0,
+        head_yaw: 0,
+        mode: 'teleport',
+        on_ground: true,
+        ridden_runtime_id: 0,
+        teleport: { cause: 'unknown', source_entity_type: 0 },
+        tick: 0n
+    })
 }
 
 function chat(channel, string) {
