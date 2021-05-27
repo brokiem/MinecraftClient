@@ -203,9 +203,7 @@ function connect(channel, address, port, version = "1.16.220") {
                 channel.send(":octagonal_sign: I can't handle custom form yet :(");
             }
 
-            if (jsonData.type !== 'form') {
-                console.log(packet)
-            }
+            console.log(packet)
             //channel.send(packet)
             //sendModalResponse(channel, "0"); // unhandled
         })
