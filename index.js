@@ -16,7 +16,7 @@ dsclient.login().catch(() => {
 });
 
 dsclient.on("ready",  () => {
-    dsclient.user.setStatus('idle');
+    dsclient.user.setStatus('online');
     dsclient.user.setActivity("Minecraft");
 
     console.log("Bot ready and online!\n");
@@ -26,84 +26,92 @@ dsclient.on("ready",  () => {
 });
 
 dsclient.on('message', async message => {
-    if (message.author.bot || !message.content.startsWith("*")) return;
+    try {
+        if (message.author.bot || !message.content.startsWith("*")) return;
 
-    const args = message.content.slice(1).trim().split(/ +/);
-    const command = args.shift().toLowerCase();
-    const channel = message.channel;
+        const args = message.content.slice(1).trim().split(/ +/);
+        const command = args.shift().toLowerCase();
+        const channel = message.channel;
 
-    console.log("Command '" + command + "' by " + message.author.tag + " on " + message.guild.name + " | " + new Date().toLocaleString());
+        console.log("Command '" + command + "' by " + message.author.tag + " on " + message.guild.name + " | " + new Date().toLocaleString());
 
-    switch (command) {
-        case "help":
-            await channel.send(makeEmbed("**Command List**\n\n○ *query <address> <port>  **--**  Query a Minecraft server\n○ *join <address> <port>  **--**  Join to Minecraft server\n○ *chat <message>  **--**  Send chat to connected server\n○ *enablechat <value>\n○ *form <button id>  **--**  Send form resp to connected server\n○ *disconnect  **--**  Disconnect from connected server\n○ *invite  **--**  Get bot invite link\n\n**Command Example**\n\n○ *query play.hypixel.net 25565\n○ *join play.nethergames.org 19132\n○ *chat hello world!\n○ *enablechat false\n○ *form 0"));
-            break;
-        case "query":
-            if (args.length > 0) {
-                await channel.send(":arrows_counterclockwise: Getting query info...")
-                ping(channel, args[0], isNaN(args[1]) ? 19132 : args[1]);
-            } else {
-                await channel.send("[Usage] *query <address> <port>\nExample: *query play.hypixel.net 25565");
-            }
-            break;
-        case "connect":
-        case "join":
-            if (args.length > 0) {
-                connect(channel, args[0], isNaN(args[1]) ? 19132 : args[1]);
-            } else {
-                await channel.send("[Usage] *connect <address> <port>");
-            }
-            break;
-        case "chat":
-        case "message":
-            if (isConnected(channel)) {
+        switch (command) {
+            case "help":
+                await channel.send(makeEmbed("**Command List**\n\n○ *query <address> <port>  **--**  Query a Minecraft server\n○ *join <address> <port>  **--**  Join to Minecraft server\n○ *chat <message>  **--**  Send chat to connected server\n○ *enablechat <value>\n○ *form <button id>  **--**  Send form resp to connected server\n○ *disconnect  **--**  Disconnect from connected server\n○ *invite  **--**  Get bot invite link\n\n**Command Example**\n\n○ *query play.hypixel.net 25565\n○ *join play.nethergames.org 19132\n○ *chat hello world!\n○ *enablechat false\n○ *form 0"));
+                break;
+            case "query":
                 if (args.length > 0) {
-                    chat(channel, args.join(" "));
-                    await channel.send(":small_red_triangle: Send message success!");
+                    await channel.send(":arrows_counterclockwise: Getting query info...")
+                    ping(channel, args[0], isNaN(args[1]) ? 19132 : args[1]);
                 } else {
-                    await channel.send(":octagonal_sign: Please enter the message!");
+                    await channel.send("[Usage] *query <address> <port>\nExample: *query play.hypixel.net 25565");
                 }
-            } else {
-                await channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
-            }
-            break;
-        case "form":
-            if (isConnected(channel)) {
-                if (clients[channel]['formId'] !== undefined) {
+                break;
+            case "connect":
+            case "join":
+                if (args.length > 0) {
+                    connect(channel, args[0], isNaN(args[1]) ? 19132 : args[1]);
+                } else {
+                    await channel.send("[Usage] *connect <address> <port>");
+                }
+                break;
+            case "chat":
+            case "message":
+                if (isConnected(channel)) {
                     if (args.length > 0) {
-                        await channel.send(":small_red_triangle: Sending modal form response");
-                        sendModalResponse(channel, args.join(" "));
-                        clients[channel]['formId'] = undefined;
+                        chat(channel, args.join(" "));
+                        await channel.send(":small_red_triangle: Send message success!");
+                    } else {
+                        await channel.send(":octagonal_sign: Please enter the message!");
                     }
                 } else {
-                    await channel.send(":octagonal_sign: No ModalFormRequestPacket found!");
+                    await channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
                 }
-            } else {
-                await channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
-            }
-            break;
-        case "enablechat":
-            if (isConnected(channel)) {
-                if (args.length > 0) {
-                    if (args[0] === "true") {
-                        clients[channel]['enableChat'] = true;
-                        await channel.send(":ballot_box_with_check: Chat successfully enabled");
-                    } else if (args[0] === "false") {
-                        clients[channel]['enableChat'] = false;
-                        await channel.send(":ballot_box_with_check: Chat successfully disabled");
+                break;
+            case "form":
+                if (isConnected(channel)) {
+                    if (clients[channel]['formId'] !== undefined) {
+                        if (args.length > 0) {
+                            await channel.send(":small_red_triangle: Sending modal form response");
+                            sendModalResponse(channel, args.join(" "));
+                            clients[channel]['formId'] = undefined;
+                        }
+                    } else {
+                        await channel.send(":octagonal_sign: No ModalFormRequestPacket found!");
+                    }
+                } else {
+                    await channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
+                }
+                break;
+            case "enablechat":
+                if (isConnected(channel)) {
+                    if (args.length > 0) {
+                        if (args[0] === "true") {
+                            clients[channel]['enableChat'] = true;
+                            await channel.send(":ballot_box_with_check: Chat successfully enabled");
+                        } else if (args[0] === "false") {
+                            clients[channel]['enableChat'] = false;
+                            await channel.send(":ballot_box_with_check: Chat successfully disabled");
+                        }
                     }
                 }
-            }
-            break;
-        case "close":
-        case "disconnect":
-            disconnect(channel);
-            break;
-        case "invite":
-        case "stats":
-        case "status":
-            await channel.send(makeEmbed("Bot Invite Link: [Click here](https://discord.com/api/oauth2/authorize?client_id=844733770581803018&permissions=2048&scope=bot)\n\nRAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB\nUptime: " + getUptime() + "\n\nClient Connected: " + connectedClient + "\nServer Invited: " + dsclient.guilds.cache.size));
-            break;
+                break;
+            case "close":
+            case "disconnect":
+                disconnect(channel);
+                break;
+            case "invite":
+            case "stats":
+            case "status":
+                await channel.send(makeEmbed("Bot Invite Link: [Click here](https://discord.com/api/oauth2/authorize?client_id=844733770581803018&permissions=2048&scope=bot)\n\nRAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB\nUptime: " + getUptime() + "\n\nClient Connected: " + connectedClient + "\nServer Invited: " + dsclient.guilds.cache.size));
+                break;
+        }
+    } catch (e) {
+        try {
+            await message.channel.send("An error occurred: " + e)
+        } catch (err) {}
+
+        console.log("Error: " + e)
     }
 })
 
