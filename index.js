@@ -347,7 +347,15 @@ function sendModalResponse(channel, string) {
 function hotbar(channel, slot) {
     clients[channel]['client'].queue('mob_equipment', {
         runtime_entity_id: runtime_entity_id,
-        item: {},
+        item: {
+            network_id: 0,
+            count: undefined,
+            metadata: undefined,
+            has_stack_id: undefined,
+            stack_id: undefined,
+            block_runtime_id: undefined,
+            extra: undefined
+        },
         slot: parseInt(slot),
         selected_slot: parseInt(slot),
         window_id: 'inventory'
