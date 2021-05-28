@@ -10,8 +10,6 @@ const query = require('minecraft-server-util');
 let clients = [];
 let connectedClient = 0;
 let debug = false;
-let player_position = [];
-let walking = [];
 
 dsclient.login().catch(() => {
     console.error("The bot token was incorrect.");
@@ -198,7 +196,7 @@ function connect(channel, address, port, version = "1.16.220") {
         client.on('start_game', (packet) => {
             this.runtime_id = packet.runtime_id;
             this.runtime_entity_id = packet.runtime_entity_id;
-            player_position[channel] = packet.spawn_position;
+            clients[channel]['player_position'] = packet.spawn_position;
 
             client.queue('set_local_player_as_initialized', {runtime_entity_id: this.runtime_entity_id});
             channel.send(":signal_strength: Successfully connected to the server!~");
@@ -232,7 +230,9 @@ function connect(channel, address, port, version = "1.16.220") {
                 channel.send(":octagonal_sign: I can't handle custom form yet :(");
             }
 
-            console.log(packet)
+            if (debug) {
+                console.log(packet)
+            }
             //sendModalResponse(channel, "0"); // unhandled
         })
 
@@ -280,7 +280,7 @@ function connect(channel, address, port, version = "1.16.220") {
 
         client.once('close', () => {
             delete clients[channel];
-			connectedClient--;
+            connectedClient--;
             channel.send(":octagonal_sign: Disconnected: Client closed!");
         });
     }).catch((error) => {
@@ -317,35 +317,44 @@ function sendModalResponse(channel, string) {
 }
 
 function move(channel) {
-    if (walking[channel] !== undefined && walking[channel]) {
+    if (clients[channel]['player_position'] === undefined) {
+        channel.send(":octagonal_sign: Please wait for the server to send the client position")
+        return;
+    }
+
+    if (clients[channel]['walking'] !== undefined && clients[channel]['walking']) {
         channel.send(":octagonal_sign: Please wait 2 seconds before walking again!");
         return;
     }
 
-    walking[channel] = true;
-    player_position[channel] = {x: player_position[channel].x + rand(-2, 2), y: player_position[channel].y, z: player_position[channel].z + rand(-2, 2)}
+    clients[channel]['walking'] = true;
+    clients[channel]['player_position'] = {
+        x: clients[channel]['player_position'].x + rand(-2, 2),
+        y: clients[channel]['player_position'].y,
+        z: clients[channel]['player_position'].z + rand(-2, 2)
+    }
 
-    channel.send(makeEmbed(":ski: Walking randomly to X:" + player_position[channel].x + " Y:" + player_position[channel].y + " Z:" + player_position[channel].z))
+    channel.send(makeEmbed(":ski: Walking randomly to X:" + clients[channel]['player_position'].x + " Y:" + clients[channel]['player_position'].y + " Z:" + clients[channel]['player_position'].z))
 
     setTimeout(function () {
-        walking[channel] = false;
+        clients[channel]['walking'] = false;
     }, 2000)
 
     clients[channel]['client'].queue('move_player', {
         runtime_id: this.runtime_id,
-        position: player_position[channel],
+        position: clients[channel]['player_position'],
         pitch: 0,
         yaw: 0,
         head_yaw: 0,
         mode: 'normal',
         on_ground: true,
         ridden_runtime_id: 0,
-        teleport: { cause: 'unknown', source_entity_type: 0 },
+        teleport: {cause: 'unknown', source_entity_type: 0},
         tick: 0n
     })
 }
 
-function rand(min, max){
+function rand(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
