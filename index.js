@@ -11,6 +11,9 @@ let clients = [];
 let connectedClient = 0;
 let debug = false;
 
+let runtime_id;
+let runtime_entity_id;
+
 dsclient.login().catch(() => {
     console.error("The bot token was incorrect.");
     process.exit();
@@ -207,11 +210,11 @@ function connect(channel, address, port, version = "1.16.220") {
         connectedClient++;
 
         client.on('start_game', (packet) => {
-            this.runtime_id = packet.runtime_id;
-            this.runtime_entity_id = packet.runtime_entity_id;
+            runtime_id = packet.runtime_id;
+            runtime_entity_id = packet.runtime_entity_id;
             clients[channel]['player_position'] = packet.spawn_position;
 
-            client.queue('set_local_player_as_initialized', {runtime_entity_id: this.runtime_entity_id});
+            client.queue('set_local_player_as_initialized', {runtime_entity_id: runtime_entity_id});
             channel.send(":signal_strength: Successfully connected to the server!~");
             clients[channel]['connected'] = true;
         });
@@ -343,7 +346,7 @@ function sendModalResponse(channel, string) {
 
 function hotbar(channel, slot) {
     clients[channel]['client'].queue('mob_equipment', {
-        runtime_entity_id: this.runtime_entity_id,
+        runtime_entity_id: runtime_entity_id,
         item: {},
         slot: parseInt(slot),
         selected_slot: parseInt(slot),
@@ -382,7 +385,7 @@ function move(channel) {
     }, 2000)
 
     clients[channel]['client'].queue('move_player', {
-        runtime_id: this.runtime_id,
+        runtime_id: runtime_id,
         position: clients[channel]['player_position'],
         pitch: 0,
         yaw: 0,
