@@ -183,7 +183,7 @@ function connect(channel, address, port, version = "1.16.220") {
     console.log("Connecting to " + address + " on port " + port)
     channel.send(":airplane: Connecting to " + address + " on port " + port);
 
-    clients[channel] = {'connected': false, 'enableChat': true, 'cachedFilteredTextPacket': []}
+    clients[channel] = {'connected': false, 'enableChat': true, 'hotbar_slot': 0, 'cachedFilteredTextPacket': []}
 
     query.statusBedrock(address, {
         port: parseInt(port), enableSRV: true, timeout: 5000
@@ -363,11 +363,46 @@ function hotbar(channel, slot) {
         selected_slot: parseInt(slot),
         window_id: 'inventory'
     });
+    clients[channel]['hotbar_slot'] = parseInt(slot)
 }
 
 function interact(channel) {
     clients[channel]['client'].queue('inventory_transaction', {
-        transaction: {transaction_type: 'item_use'}
+        legacy: {legacy_request_id: 0, legacy_transactions: 0},
+        transaction_type: '2',
+        actions: {
+            value: 'world_interaction',
+            slot: clients[channel]['hotbar_slot'],
+            old_item: {
+                network_id: 0,
+                count: undefined,
+                metadata: undefined,
+                has_stack_id: undefined,
+                stack_id: undefined,
+                block_runtime_id: undefined,
+                extra: { has_nbt: 0, nbt: undefined, can_place_on: [], can_destroy: [] }
+            },
+            new_item: {
+                network_id: 0,
+                count: undefined,
+                metadata: undefined,
+                has_stack_id: undefined,
+                stack_id: undefined,
+                block_runtime_id: undefined,
+                extra: { has_nbt: 0, nbt: undefined, can_place_on: [], can_destroy: [] }
+            }
+        },
+        transaction_data: 'item_use',
+        transaction: {
+            transaction_type: 'item_use',
+            block_position: clients[channel]['player_position'],
+            face: 0,
+            hotbar_slot: clients[channel]['hotbar_slot'],
+            held_item: 0,
+            player_pos: clients[channel]['player_position'],
+            click_pos: clients[channel]['player_position'],
+            block_runtime_id: 0
+        }
     });
 }
 
