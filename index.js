@@ -91,6 +91,9 @@ dsclient.on('message', async message => {
                     await channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
                 }
                 break;
+            case "interact":
+                interact(channel)
+                break;
             case "move":
             case "walk":
                 if (isConnected(channel)) {
@@ -354,7 +357,7 @@ function hotbar(channel, slot) {
             has_stack_id: undefined,
             stack_id: undefined,
             block_runtime_id: undefined,
-            extra: undefined
+            extra: { has_nbt: 0, nbt: undefined, can_place_on: [], can_destroy: [] }
         },
         slot: parseInt(slot),
         selected_slot: parseInt(slot),
@@ -364,7 +367,7 @@ function hotbar(channel, slot) {
 
 function interact(channel) {
     clients[channel]['client'].queue('inventory_transaction', {
-
+        transaction: {transaction_type: 'item_use'}
     });
 }
 
