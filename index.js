@@ -75,6 +75,19 @@ dsclient.on('message', async message => {
                     await channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
                 }
                 break;
+            case "hotbar":
+            case "slot":
+                if (isConnected(channel)) {
+                    if (args.length > 0) {
+                        hotbar(channel, args.join(" "));
+                        await channel.send(":small_red_triangle: Set hotbar to slot " + args.join(" "));
+                    } else {
+                        await channel.send(":octagonal_sign: Please enter the slot number!");
+                    }
+                } else {
+                    await channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
+                }
+                break;
             case "move":
             case "walk":
                 if (isConnected(channel)) {
@@ -329,7 +342,7 @@ function sendModalResponse(channel, string) {
 }
 
 function hotbar(channel, slot) {
-    clients[channel]['client'].queue('move_player', {
+    clients[channel]['client'].queue('mob_equipment', {
         runtime_entity_id: this.runtime_entity_id,
         item: {},
         slot: parseInt(slot),
