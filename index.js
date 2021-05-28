@@ -203,6 +203,12 @@ function connect(channel, address, port, version = "1.16.220") {
             clients[channel]['connected'] = true;
         });
 
+        client.on('mob_equipment', (packet) => {
+            if (debug) {
+                console.log(packet);
+            }
+        })
+
         client.on('modal_form_request', (packet) => {
             const jsonData = JSON.parse(packet.data);
             const string = "abcdefgklmr0123456789"; // minecraft color
