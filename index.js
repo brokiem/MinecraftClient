@@ -196,11 +196,20 @@ function connect(channel, address, port, version = "1.16.220") {
         client.on('start_game', (packet) => {
             this.runtime_id = packet.runtime_id;
             this.runtime_entity_id = packet.runtime_entity_id;
-            clients[channel]['player_position'] = packet.spawn_position;
 
             client.queue('set_local_player_as_initialized', {runtime_entity_id: this.runtime_entity_id});
             channel.send(":signal_strength: Successfully connected to the server!~");
             clients[channel]['connected'] = true;
+        });
+
+        client.on('add_player', (packet) => {
+            if (packet.runtime_entity_id === this.runtime_entity_id) {
+                clients[channel]['player_position'] = {
+                    x: packet.x,
+                    y: packet.y,
+                    z: packet.z
+                };
+            }
         });
 
         client.on('modal_form_request', (packet) => {
