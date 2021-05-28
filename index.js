@@ -196,7 +196,7 @@ function connect(channel, address, port, version = "1.16.220") {
         client.on('start_game', (packet) => {
             this.runtime_id = packet.runtime_id;
             this.runtime_entity_id = packet.runtime_entity_id;
-            clients[channel]['player_position'] = packet.player_position;
+            clients[channel]['player_position'] = packet.spawn_position;
 
             client.queue('set_local_player_as_initialized', {runtime_entity_id: this.runtime_entity_id});
             channel.send(":signal_strength: Successfully connected to the server!~");
@@ -204,6 +204,12 @@ function connect(channel, address, port, version = "1.16.220") {
         });
 
         client.on('mob_equipment', (packet) => {
+            if (debug) {
+                console.log(packet);
+            }
+        })
+
+        client.on('inventory_transaction', (packet) => {
             if (debug) {
                 console.log(packet);
             }
@@ -319,6 +325,22 @@ function sendModalResponse(channel, string) {
     clients[channel]['client'].queue('modal_form_response', {
         form_id: clients[channel]['formId'],
         data: string
+    });
+}
+
+function hotbar(channel, slot) {
+    clients[channel]['client'].queue('move_player', {
+        runtime_entity_id: this.runtime_entity_id,
+        item: {},
+        slot: parseInt(slot),
+        selected_slot: parseInt(slot),
+        window_id: 'inventory'
+    });
+}
+
+function interact(channel) {
+    clients[channel]['client'].queue('inventory_transaction', {
+
     });
 }
 
