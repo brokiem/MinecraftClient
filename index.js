@@ -135,7 +135,7 @@ dsclient.on('message', message => {
             case "invite":
             case "stats":
             case "status":
-                channel.send(makeEmbed("Bot Invite Link: [Click here](https://discord.com/api/oauth2/authorize?client_id=844733770581803018&permissions=3072&scope=bot)\n\nRAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB\nUptime: " + getUptime() + "\n\nClient Connected: " + connectedClient + "\nServer Invited: " + dsclient.guilds.cache.size));
+                channel.send(makeEmbed("Bot Invite Link: [Click here](https://discord.com/api/oauth2/authorize?client_id=844733770581803018&permissions=3072&scope=bot)\n\nRAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB\nUptime: " + getUptime() + "\n\nClients: " + connectedClient + "/10\nServers: " + dsclient.guilds.cache.size));
                 break;
         }
     } catch (e) {
@@ -255,7 +255,7 @@ function connect(channel, address, port, version = "1.16.220") {
 
                 channel.send(makeEmbed(text + "```" + buttons.join("\n") + "```" + "\nType ( *form <button id> ) to response"));
             } else {
-                channel.send(":octagonal_sign: I can't handle custom form yet :(");
+                channel.send(":octagonal_sign: I can't handle custom form yet, you can use ' *form null ' to close the form");
             }
 
             if (debug) {
