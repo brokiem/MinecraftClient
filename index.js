@@ -10,11 +10,12 @@ const query = require('minecraft-server-util');
 let clients = [];
 let connectedClient = 0;
 let debug = false;
+let servers;
 
 const activities = [
     "*help",
     "Minecraft",
-    "in " + dsclient.guilds.cache.size + " servers",
+    "in " + servers + " servers",
     "*invite",
     "Minecraft"
 ];
@@ -25,10 +26,12 @@ dsclient.login().catch(() => {
 });
 
 dsclient.on("ready", () => {
+    servers = dsclient.guilds.cache.size;
     dsclient.user.setStatus('online');
 
     let i = 0;
     setInterval(() => {
+        servers = dsclient.guilds.cache.size;
         dsclient.user.setActivity(activities[i]);
 
         i < activities.length ? ++i : i = 0;
