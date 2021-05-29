@@ -26,20 +26,24 @@ dsclient.login().catch(() => {
 });
 
 dsclient.on("ready", () => {
-    servers = dsclient.guilds.cache.size;
-    dsclient.user.setStatus('online');
-
-    let i = 0;
-    setInterval(() => {
+    try {
         servers = dsclient.guilds.cache.size;
-        dsclient.user.setActivity(activities[i]);
+        dsclient.user.setStatus('online');
 
-        i < activities.length ? ++i : i = 0;
-    }, 30000);
+        let i = 0;
+        setInterval(() => {
+            servers = dsclient.guilds.cache.size;
+            dsclient.user.setActivity(activities[i]);
 
-    console.log("Bot ready and online!\n");
+            i < activities.length ? ++i : i = 0;
+        }, 30000);
 
-    console.log("RAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB")
+        console.log("Bot ready and online!\n");
+
+        console.log("RAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB")
+    } catch (e) {
+        console.log("Error: " + e);
+    }
    // console.log("Servers: (" + dsclient.guilds.cache.size + ")\n - " + dsclient.guilds.cache.array().join("\n - "))
 });
 
