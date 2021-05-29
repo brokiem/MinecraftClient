@@ -11,6 +11,14 @@ let clients = [];
 let connectedClient = 0;
 let debug = false;
 
+const activities = [
+    "*help",
+    "Minecraft",
+    "in " + dsclient.guilds.cache.size + " servers",
+    "*invite",
+    "Minecraft"
+];
+
 dsclient.login().catch(() => {
     console.error("The bot token was incorrect.");
     process.exit();
@@ -18,12 +26,18 @@ dsclient.login().catch(() => {
 
 dsclient.on("ready", () => {
     dsclient.user.setStatus('online');
-    dsclient.user.setActivity("Minecraft");
+
+    let i = 0;
+    setInterval(() => {
+        dsclient.user.setActivity(activities[i]);
+
+        i < activities.length ? ++i : i = 0;
+    }, 30000);
 
     console.log("Bot ready and online!\n");
 
     console.log("RAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB")
-    console.log("Servers: (" + dsclient.guilds.cache.size + ")\n - " + dsclient.guilds.cache.array().join("\n - "))
+   // console.log("Servers: (" + dsclient.guilds.cache.size + ")\n - " + dsclient.guilds.cache.array().join("\n - "))
 });
 
 dsclient.on('message', message => {
