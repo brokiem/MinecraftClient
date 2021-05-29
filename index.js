@@ -310,8 +310,11 @@ function connect(channel, address, port, version = "1.16.220") {
         });
 
         client.once('close', () => {
-            delete clients[channel];
+            clearInterval(clients[channel]['intervalChat'])
+            clearTimeout(clients[channel]['maxTimeConnectedTimeout'])
+
             connectedClient--;
+            delete clients[channel];
             channel.send(":octagonal_sign: Disconnected: Client closed!");
         });
     }).catch((error) => {
@@ -474,8 +477,6 @@ function disconnect(channel, showMessage = true) {
         return;
     }
 
-    clearInterval(clients[channel]['intervalChat'])
-    clearTimeout(clients[channel]['maxTimeConnectedTimeout'])
     clients[channel]['client'].close()
 
     if (showMessage) {
