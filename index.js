@@ -26,7 +26,7 @@ dsclient.on("ready", () => {
     console.log("Servers: (" + dsclient.guilds.cache.size + ")\n - " + dsclient.guilds.cache.array().join("\n - "))
 });
 
-dsclient.on('message',  message => {
+dsclient.on('message', message => {
     try {
         if (message.author.bot || !message.content.startsWith("*")) return;
 
