@@ -158,8 +158,10 @@ dsclient.on('message', message => {
                     embed: makeEmbed("" +
                         "RAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB\n" +
                         "Uptime: " + getUptime() + "\n\n" +
+
                         "Clients: " + connectedClient + "/15\n" +
-                        "Servers: " + dsclient.guilds.cache.size + "\n\n" +
+                        "Guilds: " + dsclient.guilds.cache.size + "\n\n" +
+
                         "Developer: brokiem#7919\n" +
                         "Language: JavaScript\n" +
                         "Library: discord.js"
