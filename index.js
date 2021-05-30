@@ -150,12 +150,20 @@ dsclient.on('message', message => {
             case "status":
                 const button = new dsbutton.MessageButton()
                     .setStyle('url')
-                    .setLabel('Invite link')
+                    .setLabel('Bot Invite link')
                     .setURL('https://discord.com/api/oauth2/authorize?client_id=844733770581803018&permissions=3072&scope=bot');
 
                 channel.send({
                     button: button,
-                    embed: makeEmbed("RAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB\nUptime: " + getUptime() + "\n\nClients: " + connectedClient + "/10\nServers: " + dsclient.guilds.cache.size)
+                    embed: makeEmbed("" +
+                        "RAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB\n" +
+                        "Uptime: " + getUptime() + "\n\n" +
+                        "Clients: " + connectedClient + "/15\n" +
+                        "Servers: " + dsclient.guilds.cache.size + "\n\n" +
+                        "Developer: brokiem#7919\n" +
+                        "Language: JavaScript\n" +
+                        "API: discord.js"
+                    )
                 });
                 break;
         }
@@ -342,7 +350,7 @@ function connect(channel, address, port, version = "1.16.220") {
 }
 
 function checkMaxClient(channel) {
-    if (connectedClient > 10) {
+    if (connectedClient > 15) {
         channel.send(makeEmbed("Clients are too busy! Please try again later."));
         return true;
     }
