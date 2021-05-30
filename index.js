@@ -151,7 +151,7 @@ dsclient.on('message', message => {
                 const button = new dsbutton.MessageButton()
                     .setStyle('url')
                     .setLabel('Invite link')
-                    .setURL('[invitelink](https://discord.com/api/oauth2/authorize?client_id=844733770581803018&permissions=3072&scope=bot)');
+                    .setURL('https://discord.com/api/oauth2/authorize?client_id=844733770581803018&permissions=3072&scope=bot');
 
                 channel.send({
                     button: button,
