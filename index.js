@@ -150,7 +150,7 @@ dsclient.on('message', message => {
             case "status":
                 const button = new dsbutton.MessageButton()
                     .setStyle('url')
-                    .setLabel('Bot Invite link')
+                    .setLabel('Bot Invite Link')
                     .setURL('https://discord.com/api/oauth2/authorize?client_id=844733770581803018&permissions=3072&scope=bot');
 
                 channel.send({
@@ -162,7 +162,7 @@ dsclient.on('message', message => {
                         "Servers: " + dsclient.guilds.cache.size + "\n\n" +
                         "Developer: brokiem#7919\n" +
                         "Language: JavaScript\n" +
-                        "API: discord.js"
+                        "Library: discord.js"
                     )
                 });
                 break;
