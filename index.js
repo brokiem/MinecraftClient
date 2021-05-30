@@ -6,16 +6,14 @@ const discord = require('discord.js');
 const dsclient = new discord.Client();
 const {Client} = require('bedrock-protocol');
 const query = require('minecraft-server-util');
+const dsbutton = require('discord-buttons')(dsclient);
 
 let clients = [];
 let connectedClient = 0;
 let debug = false;
-let servers;
 
 const activities = [
     "*help",
-    "Minecraft",
-    "in " + servers + " servers",
     "*invite",
     "Minecraft"
 ];
@@ -26,25 +24,19 @@ dsclient.login().catch(() => {
 });
 
 dsclient.on("ready", () => {
-    try {
-        servers = dsclient.guilds.cache.size;
-        dsclient.user.setStatus('online');
+    dsclient.user.setStatus('online');
 
-        let i = 0;
-        setInterval(() => {
-            servers = dsclient.guilds.cache.size;
-            dsclient.user.setActivity(activities[i]);
+    let i = 0;
+    setInterval(() => {
+        dsclient.user.setActivity(activities[i]);
 
-            i < activities.length ? ++i : i = 0;
-        }, 30000);
+        i < activities.length ? ++i : i = 0;
+    }, 30000);
 
-        console.log("Bot ready and online!\n");
+    console.log("Bot ready and online!\n");
 
-        console.log("RAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB")
-    } catch (e) {
-        console.log("Error: " + e);
-    }
-   // console.log("Servers: (" + dsclient.guilds.cache.size + ")\n - " + dsclient.guilds.cache.array().join("\n - "))
+    console.log("RAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB")
+    // console.log("Servers: (" + dsclient.guilds.cache.size + ")\n - " + dsclient.guilds.cache.array().join("\n - "))
 });
 
 dsclient.on('message', message => {
@@ -156,7 +148,15 @@ dsclient.on('message', message => {
             case "invite":
             case "stats":
             case "status":
-                channel.send(makeEmbed("Bot Invite Link: [Click here](https://discord.com/api/oauth2/authorize?client_id=844733770581803018&permissions=3072&scope=bot)\n\nRAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB\nUptime: " + getUptime() + "\n\nClients: " + connectedClient + "/10\nServers: " + dsclient.guilds.cache.size));
+                const button = new dsbutton.MessageButton()
+                    .setStyle('url')
+                    .setLabel('Invite link')
+                    .setURL('[invitelink](https://discord.com/api/oauth2/authorize?client_id=844733770581803018&permissions=3072&scope=bot)');
+
+                channel.send({
+                    button: button,
+                    embed: makeEmbed("RAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB\nUptime: " + getUptime() + "\n\nClients: " + connectedClient + "/10\nServers: " + dsclient.guilds.cache.size)
+                });
                 break;
         }
     } catch (e) {
