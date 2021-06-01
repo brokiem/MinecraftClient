@@ -41,7 +41,7 @@ dsclient.on("ready", () => {
 
 dsclient.on('message', message => {
     try {
-        if (message.author.bot || !message.content.startsWith("*")) return;
+        if (message.author.bot || !message.content.startsWith("*") || message.channel.type !== "text") return;
 
         const args = message.content.slice(1).trim().split(/ +/);
         const command = args.shift().toLowerCase();
