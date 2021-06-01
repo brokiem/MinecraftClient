@@ -1,12 +1,12 @@
 //process.env.DEBUG = 'minecraft-protocol'
 
-require('dotenv').config();
+require("dotenv").config();
 
-const discord = require('discord.js');
+const discord = require("discord.js");
 const dsclient = new discord.Client();
-const {Client} = require('bedrock-protocol');
-const query = require('minecraft-server-util');
-const dsbutton = require('discord-buttons')(dsclient);
+const {Client} = require("bedrock-protocol");
+const query = require("minecraft-server-util");
+const dsbutton = require("discord-buttons")(dsclient);
 
 let clients = [];
 let connectedClient = 0;
@@ -24,7 +24,7 @@ dsclient.login().catch(() => {
 });
 
 dsclient.on("ready", () => {
-    dsclient.user.setStatus('online');
+    dsclient.user.setStatus("online");
 
     let i = 0;
     setInterval(() => {
@@ -39,7 +39,7 @@ dsclient.on("ready", () => {
     // console.log("Servers: (" + dsclient.guilds.cache.size + ")\n - " + dsclient.guilds.cache.array().join("\n - "))
 });
 
-dsclient.on('message', message => {
+dsclient.on("message", message => {
     try {
         if (message.author.bot || !message.content.startsWith("*") || message.channel.type !== "text") return;
 
@@ -51,9 +51,9 @@ dsclient.on('message', message => {
 
         switch (command) {
             case "debug":
-                if (message.author.id === '548120702373593090') {
+                if (message.author.id === "548120702373593090") {
                     debug = !debug;
-                    channel.send('Debug successfully ' + (debug ? "enabled" : "disabled"));
+                    channel.send("Debug successfully " + (debug ? "enabled" : "disabled"));
                 }
                 break;
             case "help":
@@ -115,11 +115,11 @@ dsclient.on('message', message => {
                 break;
             case "form":
                 if (isConnected(channel)) {
-                    if (clients[channel]['formId'] !== undefined) {
+                    if (clients[channel]["formId"] !== undefined) {
                         if (args.length > 0) {
                             channel.send(":small_red_triangle: Sending modal form response");
                             sendModalResponse(channel, args.join(" "));
-                            clients[channel]['formId'] = undefined;
+                            clients[channel]["formId"] = undefined;
                         }
                     } else {
                         channel.send(":octagonal_sign: No ModalFormRequestPacket found!");
@@ -132,10 +132,10 @@ dsclient.on('message', message => {
                 if (isConnected(channel)) {
                     if (args.length > 0) {
                         if (args[0] === "true") {
-                            clients[channel]['enableChat'] = true;
+                            clients[channel]["enableChat"] = true;
                             channel.send(":ballot_box_with_check: Chat successfully enabled");
                         } else if (args[0] === "false") {
-                            clients[channel]['enableChat'] = false;
+                            clients[channel]["enableChat"] = false;
                             channel.send(":ballot_box_with_check: Chat successfully disabled");
                         }
                     }
@@ -149,9 +149,9 @@ dsclient.on('message', message => {
             case "stats":
             case "status":
                 const button = new dsbutton.MessageButton()
-                    .setStyle('url')
-                    .setLabel('Bot Invite Link')
-                    .setURL('https://discord.com/api/oauth2/authorize?client_id=844733770581803018&permissions=3072&scope=bot');
+                    .setStyle("url")
+                    .setLabel("Bot Invite Link")
+                    .setURL("https://discord.com/api/oauth2/authorize?client_id=844733770581803018&permissions=3072&scope=bot");
 
                 channel.send({
                     button: button,
@@ -227,51 +227,51 @@ function connect(channel, address, port, version = "1.16.220") {
         channel.send(":newspaper: Started packet reading...");
         client.connect();
 
-        clients[channel]['intervalChat'] = setInterval(function () {
+        clients[channel]["intervalChat"] = setInterval(function () {
             sendCachedTextPacket(channel)
         }, 5000);
-        clients[channel]['maxTimeConnectedTimeout'] = setTimeout(function () {
+        clients[channel]["maxTimeConnectedTimeout"] = setTimeout(function () {
             if (isConnected(channel, false)) {
                 channel.send(":octagonal_sign: Disconnected because automatically disconnected every 20 minutes")
                 disconnect(channel);
             }
         }, 1200000);
 
-        clients[channel]['client'] = client;
+        clients[channel]["client"] = client;
         connectedClient++;
 
-        client.on('start_game', (packet) => {
-            clients[channel]['runtime_id'] = packet.runtime_id;
-            clients[channel]['runtime_entity_id'] = packet.runtime_entity_id;
-            clients[channel]['player_position'] = packet.spawn_position;
+        client.on("start_game", (packet) => {
+            clients[channel]["runtime_id"] = packet.runtime_id;
+            clients[channel]["runtime_entity_id"] = packet.runtime_entity_id;
+            clients[channel]["player_position"] = packet.spawn_position;
 
-            client.queue('set_local_player_as_initialized', {runtime_entity_id: clients[channel]['runtime_entity_id']});
+            client.queue("set_local_player_as_initialized", {runtime_entity_id: clients[channel]["runtime_entity_id"]});
             channel.send(":signal_strength: Successfully connected to the server!~");
-            clients[channel]['connected'] = true;
+            clients[channel]["connected"] = true;
         });
 
-        client.on('mob_equipment', (packet) => {
+        client.on("mob_equipment", (packet) => {
             if (debug) {
                 console.log(packet);
             }
         })
 
-        client.on('inventory_transaction', (packet) => {
+        client.on("inventory_transaction", (packet) => {
             if (debug) {
                 console.log(packet);
             }
         })
 
-        client.on('modal_form_request', (packet) => {
+        client.on("modal_form_request", (packet) => {
             const jsonData = JSON.parse(packet.data);
             const string = "abcdefgklmr0123456789"; // minecraft color
 
-            clients[channel]['formId'] = packet.form_id;
+            clients[channel]["formId"] = packet.form_id;
 
-            if (jsonData.type === 'form') {
+            if (jsonData.type === "form") {
                 let filteredText = jsonData.content;
                 for (let i = 0; i < jsonData.content.length; i++) {
-                    filteredText = filteredText.split('§' + string[i]).join('');
+                    filteredText = filteredText.split("§" + string[i]).join("");
                 }
 
                 let text = ":arrow_lower_right: **ModalFormRequestPacket received**\n\nForm ID: " + packet.form_id + "\n\n           " + jsonData.title + "\n" + filteredText + "\n\n";
@@ -295,51 +295,51 @@ function connect(channel, address, port, version = "1.16.220") {
             //sendModalResponse(channel, "0"); // unhandled
         })
 
-        client.on('text', (packet) => {
-            if (clients[channel]['enableChat']) {
+        client.on("text", (packet) => {
+            if (clients[channel]["enableChat"]) {
                 const string = "abcdefgklmr0123456789";
 
-                clients[channel]['filteredTextPacket'] = packet.message;
-                if (clients[channel]['filteredTextPacket'] !== undefined) {
+                clients[channel]["filteredTextPacket"] = packet.message;
+                if (clients[channel]["filteredTextPacket"] !== undefined) {
                     for (let i = 0; i < string.length; i++) {
-                        clients[channel]['filteredTextPacket'] = clients[channel]['filteredTextPacket'].split('§' + string[i]).join('').replace('discord', 'shit');
+                        clients[channel]["filteredTextPacket"] = clients[channel]["filteredTextPacket"].split("§" + string[i]).join("").replace("discord", "shit");
                     }
-                    clients[channel]['cachedFilteredTextPacket'].push(clients[channel]['filteredTextPacket']);
+                    clients[channel]["cachedFilteredTextPacket"].push(clients[channel]["filteredTextPacket"]);
                 }
             }
         })
 
-        client.on('transfer', (packet) => {
+        client.on("transfer", (packet) => {
             channel.send(makeEmbed(":arrow_lower_right: **TransferPacket received**\n\nAddress: " + packet.server_address + "\nPort: " + packet.port))
             disconnect(channel, false)
             connect(channel, packet.server_address, packet.port)
         })
 
-        client.once('resource_packs_info', () => {
-            client.write('resource_pack_client_response', {
+        client.once("resource_packs_info", () => {
+            client.write("resource_pack_client_response", {
                 response_status: 'completed',
                 resourcepackids: []
             });
 
-            client.once('resource_pack_stack', () => {
-                client.write('resource_pack_client_response', {
+            client.once("resource_pack_stack", () => {
+                client.write("resource_pack_client_response", {
                     response_status: 'completed',
                     resourcepackids: []
                 });
             });
 
-            client.queue('client_cache_status', {enabled: false});
-            client.queue('request_chunk_radius', {chunk_radius: 2});
-            client.queue('tick_sync', {request_time: BigInt(Date.now()), response_time: 0n});
+            client.queue("client_cache_status", {enabled: false});
+            client.queue("request_chunk_radius", {chunk_radius: 2});
+            client.queue("tick_sync", {request_time: BigInt(Date.now()), response_time: 0n});
         });
 
-        client.once('disconnect', (packet) => {
+        client.once("disconnect", (packet) => {
             channel.send(":octagonal_sign: Disconnected from server:\n```" + packet.message + "```");
         });
 
-        client.once('close', () => {
-            clearInterval(clients[channel]['intervalChat'])
-            clearTimeout(clients[channel]['maxTimeConnectedTimeout'])
+        client.once("close", () => {
+            clearInterval(clients[channel]["intervalChat"])
+            clearTimeout(clients[channel]["maxTimeConnectedTimeout"])
 
             connectedClient--;
             delete clients[channel];
@@ -361,9 +361,9 @@ function checkMaxClient(channel) {
 }
 
 function sendCachedTextPacket(channel) {
-    if (isConnected(channel, false) && (clients[channel]['cachedFilteredTextPacket'].length > 0) && (clients[channel] !== undefined) && clients[channel]['enableChat']) {
-        channel.send(makeEmbed(clients[channel]['cachedFilteredTextPacket'].join("\n\n")))
-        clients[channel]['cachedFilteredTextPacket'] = [];
+    if (isConnected(channel, false) && (clients[channel]["cachedFilteredTextPacket"].length > 0) && (clients[channel] !== undefined) && clients[channel]["enableChat"]) {
+        channel.send(makeEmbed(clients[channel]["cachedFilteredTextPacket"].join("\n\n")))
+        clients[channel]["cachedFilteredTextPacket"] = [];
     }
 }
 
@@ -372,15 +372,15 @@ function makeEmbed(string) {
 }
 
 function sendModalResponse(channel, string) {
-    clients[channel]['client'].queue('modal_form_response', {
-        form_id: clients[channel]['formId'],
+    clients[channel]["client"].queue("modal_form_response", {
+        form_id: clients[channel]["formId"],
         data: string
     });
 }
 
 function hotbar(channel, slot) {
-    clients[channel]['client'].queue('mob_equipment', {
-        runtime_entity_id: clients[channel]['runtime_entity_id'],
+    clients[channel]["client"].queue("mob_equipment", {
+        runtime_entity_id: clients[channel]["runtime_entity_id"],
         item: {
             network_id: 0,
             count: undefined,
@@ -388,22 +388,22 @@ function hotbar(channel, slot) {
             has_stack_id: undefined,
             stack_id: undefined,
             block_runtime_id: undefined,
-            extra: { has_nbt: 0, nbt: undefined, can_place_on: [], can_destroy: [] }
+            extra: {has_nbt: 0, nbt: undefined, can_place_on: [], can_destroy: []}
         },
         slot: parseInt(slot),
         selected_slot: parseInt(slot),
         window_id: 'inventory'
     });
-    clients[channel]['hotbar_slot'] = parseInt(slot)
+    clients[channel]["hotbar_slot"] = parseInt(slot)
 }
 
 function interact(channel) {
-    clients[channel]['client'].queue('inventory_transaction', {
+    clients[channel]["client"].queue("inventory_transaction", {
         legacy: {legacy_request_id: 0, legacy_transactions: 0},
         transaction_type: '2',
         actions: {
             value: 'world_interaction',
-            slot: clients[channel]['hotbar_slot'],
+            slot: clients[channel]["hotbar_slot"],
             old_item: {
                 network_id: 0,
                 count: undefined,
@@ -411,7 +411,7 @@ function interact(channel) {
                 has_stack_id: undefined,
                 stack_id: undefined,
                 block_runtime_id: undefined,
-                extra: { has_nbt: 0, nbt: undefined, can_place_on: [], can_destroy: [] }
+                extra: {has_nbt: 0, nbt: undefined, can_place_on: [], can_destroy: []}
             },
             new_item: {
                 network_id: 0,
@@ -426,51 +426,51 @@ function interact(channel) {
         transaction_data: 'item_use',
         transaction: {
             transaction_type: 'item_use',
-            block_position: clients[channel]['player_position'],
+            block_position: clients[channel]["player_position"],
             face: 0,
-            hotbar_slot: clients[channel]['hotbar_slot'],
+            hotbar_slot: clients[channel]["hotbar_slot"],
             held_item: 0,
-            player_pos: clients[channel]['player_position'],
-            click_pos: clients[channel]['player_position'],
+            player_pos: clients[channel]["player_position"],
+            click_pos: clients[channel]["player_position"],
             block_runtime_id: 0
         }
     });
 }
 
 function move(channel) {
-    if (clients[channel]['player_position'] === undefined) {
+    if (clients[channel]["player_position"] === undefined) {
         channel.send(":octagonal_sign: Please wait for the server to send the client position")
         return;
     }
 
-    if (clients[channel]['walking'] !== undefined && clients[channel]['walking']) {
+    if (clients[channel]["walking"] !== undefined && clients[channel]["walking"]) {
         channel.send(":octagonal_sign: Please wait 2 seconds before walking again!");
         return;
     }
 
-    clients[channel]['walking'] = true;
-    clients[channel]['player_position'] = {
-        x: clients[channel]['player_position'].x + rand(-2, 2),
-        y: clients[channel]['player_position'].y,
-        z: clients[channel]['player_position'].z + rand(-2, 2)
+    clients[channel]["walking"] = true;
+    clients[channel]["player_position"] = {
+        x: clients[channel]["player_position"].x + rand(-2, 2),
+        y: clients[channel]["player_position"].y,
+        z: clients[channel]["player_position"].z + rand(-2, 2)
     }
 
-    channel.send(makeEmbed(":ski: Walking randomly to X:" + clients[channel]['player_position'].x + " Y:" + clients[channel]['player_position'].y + " Z:" + clients[channel]['player_position'].z))
+    channel.send(makeEmbed(":ski: Walking randomly to X:" + clients[channel]["player_position"].x + " Y:" + clients[channel]["player_position"].y + " Z:" + clients[channel]["player_position"].z))
 
     setTimeout(function () {
-        clients[channel]['walking'] = false;
+        clients[channel]["walking"] = false;
     }, 2000)
 
-    clients[channel]['client'].queue('move_player', {
-        runtime_id: clients[channel]['runtime_id'],
-        position: clients[channel]['player_position'],
+    clients[channel]["client"].queue("move_player", {
+        runtime_id: clients[channel]["runtime_id"],
+        position: clients[channel]["player_position"],
         pitch: 0,
         yaw: 0,
         head_yaw: 0,
         mode: 'normal',
         on_ground: true,
         ridden_runtime_id: 0,
-        teleport: {cause: 'unknown', source_entity_type: 0},
+        teleport: {cause: "unknown", source_entity_type: 0},
         tick: 0n
     })
 }
@@ -480,7 +480,7 @@ function rand(min, max) {
 }
 
 function chat(channel, string) {
-    clients[channel]['client'].queue('text', {
+    clients[channel]["client"].queue("text", {
         type: 'chat',
         needs_translation: false,
         source_name: string,
@@ -493,7 +493,7 @@ function chat(channel, string) {
 
 function isConnected(channel, check = true) {
     if (check) {
-        return clients[channel] !== undefined && clients[channel]['connected']
+        return clients[channel] !== undefined && clients[channel]["connected"]
     }
 
     return clients[channel] !== undefined;
@@ -505,7 +505,7 @@ function disconnect(channel, showMessage = true) {
         return;
     }
 
-    clients[channel]['client'].close()
+    clients[channel]["client"].close()
 
     if (showMessage) {
         channel.send(":octagonal_sign: Disconnected succesfully!");
