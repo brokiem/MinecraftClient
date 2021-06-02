@@ -12,6 +12,15 @@ let clients = [];
 let connectedClient = 0;
 let debug = false;
 
+const mcversion = '1.0.0'
+
+const x = "<:brokiem_x:849486576727097384>";
+const e = "<:enter:849493018910261259>";
+const auth = "<:auth:849493635820158977>"
+const signal = "<:stage:849498188096077834>";
+const reply = "<:reply:849498663956774942>";
+const barrier = "<:barrier:849501525596438539>";
+
 const activities = [
     "*help",
     "*invite",
@@ -40,6 +49,13 @@ dsclient.on("ready", async () => {
 
 dsclient.on("message", async message => {
     try {
+        if (message.content.includes(dsclient.user.id) && message.channel.type === "text" && !message.author.bot) {
+            await message.reply("My Prefix is ``*``").then(msg => {
+                msg.delete({timeout: 8000})
+            });
+            return;
+        }
+
         if (message.author.bot || !message.content.startsWith("*") || message.channel.type !== "text") return;
 
         const args = message.content.slice(1).trim().split(/ +/);
@@ -60,7 +76,7 @@ dsclient.on("message", async message => {
                 break;
             case "query":
                 if (args.length > 0) {
-                    await channel.send(":arrows_counterclockwise: Getting query info...")
+                    await channel.send(signal + " Getting query info...")
                     await ping(channel, args[0], isNaN(args[1]) ? 19132 : args[1]);
                 } else {
                     await channel.send("[Usage] *query <address> <port>\nExample: *query play.hypixel.net 25565");
@@ -79,12 +95,12 @@ dsclient.on("message", async message => {
                 if (await isConnected(channel)) {
                     if (args.length > 0) {
                         await chat(channel, args.join(" "));
-                        await channel.send(":small_red_triangle: Send message success!");
+                        await channel.send(reply + " Sending message...");
                     } else {
-                        await channel.send(":octagonal_sign: Please enter the message!");
+                        await channel.send(x + " Please enter the message!");
                     }
                 } else {
-                    await channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
+                    await channel.send(barrier + " I haven't connected to any server yet!");
                 }
                 break;
             case "hotbar":
@@ -92,12 +108,12 @@ dsclient.on("message", async message => {
                 if (await isConnected(channel)) {
                     if (args.length > 0) {
                         await hotbar(channel, args.join(" "));
-                        await channel.send(":small_red_triangle: Set hotbar to slot " + args.join(" "));
+                        await channel.send(reply + " Set hotbar to slot " + args.join(" "));
                     } else {
-                        await channel.send(":octagonal_sign: Please enter the slot number!");
+                        await channel.send(x + " Please enter the slot number!");
                     }
                 } else {
-                    await channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
+                    await channel.send(x + " I haven't connected to any server yet!");
                 }
                 break;
             case "interact":
@@ -106,25 +122,25 @@ dsclient.on("message", async message => {
             case "move":
             case "walk":
                 if (await isConnected(channel)) {
-                    await channel.send(":small_red_triangle: Walking...");
+                    await channel.send(reply + " Walking...");
                     await move(channel);
                 } else {
-                    await channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
+                    await channel.send(x + " I haven't connected to any server yet!");
                 }
                 break;
             case "form":
                 if (await isConnected(channel)) {
                     if (clients[channel]["formId"] !== undefined) {
                         if (args.length > 0) {
-                            await channel.send(":small_red_triangle: Sending modal form response");
+                            await channel.send(reply + " Sending modal form response");
                             await sendModalResponse(channel, args.join(" "));
                             clients[channel]["formId"] = undefined;
                         }
                     } else {
-                        await channel.send(":octagonal_sign: No ModalFormRequestPacket found!");
+                        await channel.send(x + " No ModalFormRequestPacket found!");
                     }
                 } else {
-                    await channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
+                    await channel.send(x + " I haven't connected to any server yet!");
                 }
                 break;
             case "enablechat":
@@ -138,6 +154,9 @@ dsclient.on("message", async message => {
                             await channel.send(":ballot_box_with_check: Chat successfully disabled");
                         }
                     }
+                } else {
+                    await channel.send(x + " I haven't connected to any server yet!");
+
                 }
                 break;
             case "close":
@@ -155,6 +174,8 @@ dsclient.on("message", async message => {
                 await channel.send({
                     button: button,
                     embed: makeEmbed("" +
+                        "**MinecraftClient** - v" + mcversion + "\n\n" +
+
                         "RAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB\n" +
                         "Uptime: " + await getUptime() + "\n\n" +
 
@@ -163,7 +184,7 @@ dsclient.on("message", async message => {
 
                         "Developer: brokiem#7919\n" +
                         "Language: JavaScript\n" +
-                        "Library: discord.js"
+                        "Library: discord.js v12"
                     )
                 });
                 break;
@@ -175,7 +196,7 @@ dsclient.on("message", async message => {
         }
     } catch (e) {
         try {
-            await message.channel.send(":octagonal_sign: **An error occurred:** " + e)
+            await message.channel.send(x + " **An error occurred:** " + e)
         } catch (err) {}
 
         console.log("Error: " + e)
@@ -211,7 +232,7 @@ async function pingJava(channel, address, port) {
 
 function connect(channel, address, port, version = "1.16.220") {
     if (isConnected(channel, false)) {
-        channel.send(":octagonal_sign: I've connected!");
+        channel.send(x + " I've connected!");
         return;
     }
 
@@ -220,7 +241,7 @@ function connect(channel, address, port, version = "1.16.220") {
     }
 
     console.log("Connecting to " + address + " on port " + port)
-    channel.send(":airplane: Connecting to " + address + " on port " + port);
+    channel.send(signal + " Connecting to " + address + " on port " + port);
 
     clients[channel] = {'connected': false, 'enableChat': true, 'hotbar_slot': 0, 'cachedFilteredTextPacket': []}
 
@@ -243,7 +264,7 @@ function connect(channel, address, port, version = "1.16.220") {
         }, 5000);
         clients[channel]["maxTimeConnectedTimeout"] = setTimeout(function () {
             if (isConnected(channel, false)) {
-                channel.send(":octagonal_sign: Disconnected because automatically disconnected every 20 minutes")
+                channel.send(x + " Disconnected because automatically disconnected every 20 minutes")
                 disconnect(channel);
             }
         }, 1200000);
@@ -285,7 +306,7 @@ function connect(channel, address, port, version = "1.16.220") {
                     filteredText = filteredText.split("§" + string[i]).join("");
                 }
 
-                let text = ":arrow_lower_right: **ModalFormRequestPacket received**\n\nForm ID: " + packet.form_id + "\n\n           " + jsonData.title + "\n" + filteredText + "\n\n";
+                let text = e + "  **ModalFormRequestPacket received**\n\nForm ID: " + packet.form_id + "\n\n           " + jsonData.title + "\n" + filteredText + "\n\n";
 
                 let buttonId = 0;
                 let buttons = [];
@@ -297,7 +318,7 @@ function connect(channel, address, port, version = "1.16.220") {
 
                 channel.send(makeEmbed(text + "```" + buttons.join("\n") + "```" + "\nType ( *form <button id> ) to response"));
             } else {
-                channel.send(":octagonal_sign: I can't handle custom form yet, you can use ' *form null ' to close the form");
+                channel.send(x + " I can't handle custom form yet, you can use ' *form null ' to close the form");
             }
 
             if (debug) {
@@ -321,7 +342,7 @@ function connect(channel, address, port, version = "1.16.220") {
         })
 
         client.on("transfer", (packet) => {
-            channel.send(makeEmbed(":arrow_lower_right: **TransferPacket received**\n\nAddress: " + packet.server_address + "\nPort: " + packet.port))
+            channel.send(makeEmbed(e + "  **TransferPacket received**\n\nAddress: " + packet.server_address + "\nPort: " + packet.port))
             disconnect(channel, false)
             connect(channel, packet.server_address, packet.port)
         })
@@ -345,7 +366,7 @@ function connect(channel, address, port, version = "1.16.220") {
         });
 
         client.once("disconnect", (packet) => {
-            channel.send(":octagonal_sign: Disconnected from server:\n```" + packet.message + "```");
+            channel.send(x + " Disconnected from server:\n```" + packet.message + "```");
         });
 
         client.once("close", () => {
@@ -354,11 +375,11 @@ function connect(channel, address, port, version = "1.16.220") {
 
             connectedClient--;
             delete clients[channel];
-            channel.send(":octagonal_sign: Disconnected: Client closed!");
+            channel.send(x + " Disconnected: Client closed!");
         });
     }).catch((error) => {
         delete clients[channel];
-        channel.send(":octagonal_sign: Unable to connect to [" + address + "/" + port + "]. " + error.message);
+        channel.send(x + " Unable to connect to [" + address + "/" + port + "]. " + error.message);
     });
 }
 
@@ -450,12 +471,12 @@ async function interact(channel) {
 
 async function move(channel) {
     if (clients[channel]["player_position"] === undefined) {
-        channel.send(":octagonal_sign: Please wait for the server to send the client position")
+        channel.send(x + " Please wait for the server to send the client position")
         return;
     }
 
     if (clients[channel]["walking"] !== undefined && clients[channel]["walking"]) {
-        channel.send(":octagonal_sign: Please wait 2 seconds before walking again!");
+        channel.send(x + " Please wait 2 seconds before walking again!");
         return;
     }
 
@@ -512,14 +533,14 @@ function isConnected(channel, check = true) {
 
 async function disconnect(channel, showMessage = true) {
     if (!await isConnected(channel, false)) {
-        channel.send(":octagonal_sign: I haven't connected to any server yet!\n");
+        channel.send(barrier + " I haven't connected to any server yet!\n");
         return;
     }
 
     clients[channel]["client"].close()
 
     if (showMessage) {
-        channel.send(":octagonal_sign: Disconnected succesfully!");
+        channel.send(auth + " Disconnected succesfully!");
     }
 }
 
@@ -531,5 +552,5 @@ async function getUptime() {
     let minutes = Math.floor(totalSeconds / 60);
     let seconds = totalSeconds % 60;
 
-    return ((0 < days) ? (days + " day, ") : "") + hours + "h, " + minutes + "m and " + seconds.toFixed(0) + "s";
+    return /*((0 < days) ? (days + " day, ") : "") + */hours + "h, " + minutes + "m and " + seconds.toFixed(0) + "s";
 }
