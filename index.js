@@ -97,8 +97,13 @@ dsclient.on("message", async message => {
             case "message":
                 if (await isConnected(channel)) {
                     if (args.length > 0) {
-                        await chat(channel, args.join(" "));
-                        await channel.send(reply + " Sending message...");
+                        if (args.join(" ").charAt(0) === "/") {
+                            await sendCommand(channel, args.join(" "));
+                            await channel.send(reply + " Sending command...");
+                        } else {
+                            await chat(channel, args.join(" "));
+                            await channel.send(reply + " Sending message...");
+                        }
                     } else {
                         await channel.send(x + " Please enter the message!");
                     }
@@ -523,6 +528,17 @@ async function chat(channel, string) {
         paramaters: undefined,
         xuid: '',
         platform_chat_id: ''
+    });
+}
+
+async function sendCommand(channel, string) {
+    clients[channel]["client"].queue("command_request", {
+        command: string,
+        origin: {
+            type: "player",
+            uuid: "",
+            request_id: ""
+        }
     });
 }
 
