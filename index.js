@@ -38,7 +38,7 @@ dsclient.on("ready", async () => {
     setInterval(() => {
         dsclient.user.setActivity(activities[i]);
 
-        i < activities.length ? ++i : i = 0;
+        i <= activities.length ? ++i : i = 0;
     }, 30000);
 
     console.log("Bot ready and online!\n");
@@ -50,8 +50,12 @@ dsclient.on("ready", async () => {
 dsclient.on("message", async message => {
     try {
         if (message.content.includes(dsclient.user.id) && message.channel.type === "text" && !message.author.bot) {
-            await message.reply("My Prefix is ``*``").then(msg => {
-                msg.delete({timeout: 8000})
+            message.channel.startTyping();
+            await message.channel.send(makeEmbed("My Prefix is *")).then(msg => {
+                try {
+                    msg.delete({timeout: 8000});
+                } catch (e) {
+                }
             });
             return;
         }
@@ -72,9 +76,11 @@ dsclient.on("message", async message => {
                 }
                 break;
             case "help":
+                channel.startTyping();
                 await channel.send(makeEmbed("**Command List**\n\n○ *query <address> <port>  **--**  Query a Minecraft server\n○ *join <address> <port>  **--**  Join to Minecraft server\n○ *chat <message>  **--**  Send chat to connected server\n○ *enablechat <value>\n○ *form <button id>  **--**  Send form resp to connected server\n○ *disconnect  **--**  Disconnect from connected server\n○ *invite  **--**  Get bot invite link\n\n**Command Example**\n\n○ *query play.hypixel.net 25565\n○ *join play.nethergames.org 19132\n○ *chat hello world!\n○ *enablechat false\n○ *form 0"));
                 break;
             case "query":
+                channel.startTyping();
                 if (args.length > 0) {
                     await channel.send(signal + " Getting query info...")
                     await ping(channel, args[0], isNaN(args[1]) ? 19132 : args[1]);
@@ -84,6 +90,7 @@ dsclient.on("message", async message => {
                 break;
             case "connect":
             case "join":
+                channel.startTyping();
                 if (args.length > 0) {
                     connect(channel, args[0], isNaN(args[1]) ? 19132 : args[1]);
                 } else {
@@ -92,6 +99,7 @@ dsclient.on("message", async message => {
                 break;
             case "chat":
             case "message":
+                channel.startTyping();
                 if (await isConnected(channel)) {
                     if (args.length > 0) {
                         await chat(channel, args.join(" "));
@@ -105,6 +113,7 @@ dsclient.on("message", async message => {
                 break;
             case "hotbar":
             case "slot":
+                channel.startTyping();
                 if (await isConnected(channel)) {
                     if (args.length > 0) {
                         await hotbar(channel, args.join(" "));
@@ -117,10 +126,12 @@ dsclient.on("message", async message => {
                 }
                 break;
             case "interact":
+                channel.startTyping();
                 await interact(channel)
                 break;
             case "move":
             case "walk":
+                channel.startTyping();
                 if (await isConnected(channel)) {
                     await channel.send(reply + " Walking...");
                     await move(channel);
@@ -129,6 +140,7 @@ dsclient.on("message", async message => {
                 }
                 break;
             case "form":
+                channel.startTyping();
                 if (await isConnected(channel)) {
                     if (clients[channel]["formId"] !== undefined) {
                         if (args.length > 0) {
@@ -144,6 +156,7 @@ dsclient.on("message", async message => {
                 }
                 break;
             case "enablechat":
+                channel.startTyping();
                 if (await isConnected(channel)) {
                     if (args.length > 0) {
                         if (args[0] === "true") {
@@ -161,11 +174,13 @@ dsclient.on("message", async message => {
                 break;
             case "close":
             case "disconnect":
+                channel.startTyping();
                 await disconnect(channel);
                 break;
             case "invite":
             case "stats":
             case "status":
+                channel.startTyping();
                 const button = new dsbutton.MessageButton()
                     .setStyle("url")
                     .setLabel("Bot Invite Link")
@@ -189,11 +204,15 @@ dsclient.on("message", async message => {
                 });
                 break;
             case "servers":
+                channel.startTyping();
                 if (message.author.id === "548120702373593090") {
                     await channel.send("Servers: (" + dsclient.guilds.cache.size + ")\n - " + dsclient.guilds.cache.array().join("\n - "));
                 }
                 break;
         }
+        setTimeout(function () {
+            channel.stopTyping(true);
+        }, 2000);
     } catch (e) {
         try {
             await message.channel.send(x + " **An error occurred:** " + e)
