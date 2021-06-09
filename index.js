@@ -80,7 +80,23 @@ dsclient.on("message", async message => {
                 }
                 break;
             case "help":
-                await channel.send(makeEmbed("**Command List**\n\n○ ``*query <address> <port>``  **~**  Query a Minecraft server\n○ ``*join <address> <port> <version>`` **~**  Join to Minecraft server\n○ ``*chat <message>``  **~**  Send chat to connected server\n○ ``*enablechat <value>``\n○ ``*form <button id>``  **~**  Send form resp to connected server\n○ ``*disconnect``  **~**  Disconnect from connected server\n○ ``*invite``  **~**  Get bot invite link\n\n**Command Example**\n\n○ *query play.hypixel.net 25565\n○ *join play.nethergames.org 19132\n○ *chat hello world!\n○ *enablechat false\n○ *form 0"));
+                await channel.send(makeEmbed("" +
+                    "**Command List**\n\n○ " +
+                    "``*query <address> <port>``  **~**  Query a Minecraft server\n○ " +
+                    "``*join <address> <port> <version>`` **~**  Join to Minecraft server\n○ " +
+                    "``*chat <message>``  **~**  Send chat to connected server\n○ " +
+                    "``*enablechat <value>``\n○ " +
+                    "``*form <button id>``  **~**  Send form resp to connected server\n○ " +
+                    "``*disconnect``  **~**  Disconnect from connected server\n○ " +
+                    "``*invite``  **~**  Get bot invite link\n\n" +
+
+                    "**Command Example**\n\n○ " +
+
+                    "*query play.hypixel.net 25565\n○ " +
+                    "*join play.nethergames.org 19132\n○ " +
+                    "*chat hello world!\n○ " +
+                    "*enablechat false\n○ " +
+                    "*form 0"));
                 break;
             case "query":
                 if (args.length > 0) {
@@ -100,7 +116,7 @@ dsclient.on("message", async message => {
 
                     connect(channel, args[0], isNaN(args[1]) ? 19132 : args[1], args[2] ?? "1.17.0");
                 } else {
-                    await channel.send("[Usage] *connect <address> <port>");
+                    await channel.send("**Usage:** *connect <address> <port> <version>");
                 }
                 break;
             case "chat":
@@ -115,7 +131,7 @@ dsclient.on("message", async message => {
                             await channel.send(reply + " Sending message...");
                         }
                     } else {
-                        await channel.send(x + " Please enter the message!");
+                        await channel.send(barrier + " Please enter the message!");
                     }
                 } else {
                     await channel.send(barrier + " I haven't connected to any server yet!");
@@ -128,7 +144,7 @@ dsclient.on("message", async message => {
                         await hotbar(channel, args.join(" "));
                         await channel.send(reply + " Set hotbar to slot " + args.join(" "));
                     } else {
-                        await channel.send(x + " Please enter the slot number!");
+                        await channel.send(barrier + " Please enter the slot number!");
                     }
                 } else {
                     await channel.send(x + " I haven't connected to any server yet!");
@@ -155,7 +171,7 @@ dsclient.on("message", async message => {
                             clients[channel]["formId"] = undefined;
                         }
                     } else {
-                        await channel.send(x + " No ModalFormRequestPacket found!");
+                        await channel.send(barrier + " No ModalFormRequestPacket found!");
                     }
                 } else {
                     await channel.send(x + " I haven't connected to any server yet!");
