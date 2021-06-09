@@ -27,6 +27,11 @@ const activities = [
     "Minecraft"
 ];
 
+const mcversions = [
+    "1.17.0",
+    "1.16.220"
+];
+
 dsclient.login().catch(() => {
     console.error("The bot token was incorrect.");
 });
@@ -75,7 +80,7 @@ dsclient.on("message", async message => {
                 }
                 break;
             case "help":
-                await channel.send(makeEmbed("**Command List**\n\n○ *query <address> <port>  **--**  Query a Minecraft server\n○ *join <address> <port>  **--**  Join to Minecraft server\n○ *chat <message>  **--**  Send chat to connected server\n○ *enablechat <value>\n○ *form <button id>  **--**  Send form resp to connected server\n○ *disconnect  **--**  Disconnect from connected server\n○ *invite  **--**  Get bot invite link\n\n**Command Example**\n\n○ *query play.hypixel.net 25565\n○ *join play.nethergames.org 19132\n○ *chat hello world!\n○ *enablechat false\n○ *form 0"));
+                await channel.send(makeEmbed("**Command List**\n\n○ ``*query <address> <port>``  **~**  Query a Minecraft server\n○ ``*join <address> <port> <version>`` **~**  Join to Minecraft server\n○ ``*chat <message>``  **~**  Send chat to connected server\n○ ``*enablechat <value>``\n○ ``*form <button id>``  **~**  Send form resp to connected server\n○ ``*disconnect``  **~**  Disconnect from connected server\n○ ``*invite``  **~**  Get bot invite link\n\n**Command Example**\n\n○ *query play.hypixel.net 25565\n○ *join play.nethergames.org 19132\n○ *chat hello world!\n○ *enablechat false\n○ *form 0"));
                 break;
             case "query":
                 if (args.length > 0) {
@@ -88,7 +93,12 @@ dsclient.on("message", async message => {
             case "connect":
             case "join":
                 if (args.length > 0) {
-                    connect(channel, args[0], isNaN(args[1]) ? 19132 : args[1]);
+                    if (args[2] !== undefined && !mcversions.includes(args[2])) {
+                        await channel.send(makeEmbed("Supported versions: " + mcversions.join(", ")));
+                        return;
+                    }
+
+                    connect(channel, args[0], isNaN(args[1]) ? 19132 : args[1], args[2] ?? "1.17.0");
                 } else {
                     await channel.send("[Usage] *connect <address> <port>");
                 }
@@ -238,9 +248,9 @@ async function pingJava(channel, address, port) {
     })
 }
 
-function connect(channel, address, port, version = "1.16.220") {
+function connect(channel, address, port, version = "1.17.0") {
     if (isConnected(channel, false)) {
-        channel.send(x + " I've connected!");
+        channel.send(x + " I've connected on this channel!");
         return;
     }
 
@@ -248,8 +258,8 @@ function connect(channel, address, port, version = "1.16.220") {
         return;
     }
 
-    console.log("Connecting to " + address + " on port " + port)
-    channel.send(signal + " Connecting to " + address + " on port " + port);
+    console.log("Connecting to " + address + " on port " + port + " with version " + version)
+    channel.send(signal + " Connecting to " + address + " on port " + port + " with version " + version);
 
     clients[channel] = {'connected': false, 'enableChat': true, 'hotbar_slot': 0, 'cachedFilteredTextPacket': []}
 
@@ -264,8 +274,14 @@ function connect(channel, address, port, version = "1.16.220") {
             authTitle: '00000000441cc96b'
         });
 
-        channel.send(":newspaper: Started packet reading...");
         client.connect();
+        channel.send(":newspaper: Started packet reading...");
+        clients[channel]["connectTimeout"] = setTimeout(function () {
+            if (!clients[channel]["connected"]) {
+                channel.send(x + " Server didn't respond in 5 seconds. Something wrong happened\n" + e + " Maybe this problem happened because: Incompatible protocol, Packet processing error or Connection problem");
+                disconnect(channel, false);
+            }
+        }, 5000);
 
         clients[channel]["intervalChat"] = setInterval(function () {
             sendCachedTextPacket(channel)
@@ -285,9 +301,31 @@ function connect(channel, address, port, version = "1.16.220") {
             clients[channel]["runtime_entity_id"] = packet.runtime_entity_id;
             clients[channel]["player_position"] = packet.spawn_position;
 
-            client.queue("set_local_player_as_initialized", {runtime_entity_id: clients[channel]["runtime_entity_id"]});
             channel.send(":signal_strength: Successfully connected to the server!~");
             clients[channel]["connected"] = true;
+            client.queue("set_local_player_as_initialized", {runtime_entity_id: clients[channel]["runtime_entity_id"]});
+
+            if (clients[channel]["connectTimeout"] !== undefined) {
+                clearTimeout(clients[channel]["connectTimeout"]);
+            }
+        });
+
+        client.on("play_status", (packet) => {
+            let message = "NULL";
+            switch (packet.status) {
+                case "failed_client":
+                case "failed_spawn":
+                    message = "Incompatible version";
+                    break;
+                case "failed_server_full":
+                    message = "Server full!";
+                    break;
+            }
+
+            if (message !== "NULL") {
+                channel.send("Disconnected from the server: " + message);
+                disconnect(channel, false);
+            }
         });
 
         client.on("mob_equipment", (packet) => {
@@ -353,7 +391,7 @@ function connect(channel, address, port, version = "1.16.220") {
             channel.send(makeEmbed(e + "  **TransferPacket received**\n\nAddress: " + packet.server_address + "\nPort: " + packet.port))
             disconnect(channel, false)
             connect(channel, packet.server_address, packet.port)
-        })
+        });
 
         client.once("resource_packs_info", () => {
             client.write("resource_pack_client_response", {
