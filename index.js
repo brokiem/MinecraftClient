@@ -114,7 +114,7 @@ dsclient.on("message", async message => {
                         return;
                     }
 
-                    connect(channel, args[0], isNaN(args[1]) ? 19132 : args[1], args[2] ?? "1.17.0");
+                    connect(channel, args[0], isNaN(args[1]) ? 19132 : args[1], args[2] ?? "auto");
                 } else {
                     await channel.send("**Usage:** *connect <address> <port> <version>");
                 }
@@ -264,7 +264,7 @@ async function pingJava(channel, address, port) {
     })
 }
 
-function connect(channel, address, port, version = "1.17.0") {
+function connect(channel, address, port, version = "auto") {
     if (isConnected(channel, false)) {
         channel.send(x + " I've connected on this channel!");
         return;
@@ -286,15 +286,16 @@ function connect(channel, address, port, version = "1.17.0") {
             host: address,
             port: parseInt(port),
             offline: false,
-            version: version,
-            authTitle: '00000000441cc96b'
+            version: version === "auto" ? null : version,
+            authTitle: '00000000441cc96b',
+            skipPing: true
         });
 
         client.connect();
         channel.send(":newspaper: Started packet reading...");
         clients[channel]["connectTimeout"] = setTimeout(function () {
             if (!clients[channel]["connected"]) {
-                channel.send(x + " Server didn't respond in 5 seconds. Something wrong happened\n" + e + " Maybe this problem happened because: Incompatible protocol, Packet processing error or Connection problem");
+                channel.send(x + " Server didn't respond in 5 seconds. Something wrong happened\n" + e + " Maybe this problem happened because: Incompatible version/protocol, Packet processing error or Connection problem");
                 disconnect(channel, false);
             }
         }, 5000);
