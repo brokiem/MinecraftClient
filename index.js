@@ -282,14 +282,24 @@ function connect(channel, address, port, version = "auto") {
     query.statusBedrock(address, {
         port: parseInt(port), enableSRV: true, timeout: 5000
     }).then(() => {
-        const client = new Client({
+        let client = new Client({
             host: address,
             port: parseInt(port),
             offline: false,
-            version: version === "auto" ? null : version,
             authTitle: '00000000441cc96b',
             skipPing: true
         });
+
+        if (version !== "auto") {
+            client = new Client({
+                host: address,
+                port: parseInt(port),
+                version: version,
+                offline: false,
+                authTitle: '00000000441cc96b',
+                skipPing: true
+            });
+        }
 
         client.connect();
         channel.send(":newspaper: Started packet reading...");
