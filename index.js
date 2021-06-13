@@ -468,6 +468,11 @@ function connect(channel, address, port, version = "auto") {
             clearInterval(clients[channel]["intervalChat"])
             clearTimeout(clients[channel]["maxTimeConnectedTimeout"])
 
+            if (connectedClientGuild[channel.guild] !== undefined) {
+                --connectedClientGuild[channel.guild];
+                console.log(connectedClientGuild[channel.guild]);
+            }
+
             connectedClient--;
             delete clients[channel];
             channel.send(x + " Disconnected: Client closed!");
@@ -659,13 +664,7 @@ function disconnect(channel, showMessage = true) {
         return;
     }
 
-    clients[channel]["client"].close()
-
-    if (connectedClientGuild[channel.guild] !== undefined) {
-        if (connectedClientGuild[channel.guild] > 0) {
-            --connectedClientGuild[channel.guild];
-        }
-    }
+    clients[channel]["client"].close();
 
     if (showMessage) {
         channel.send(auth + " Disconnected succesfully!");
