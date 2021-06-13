@@ -470,7 +470,10 @@ function connect(channel, address, port, version = "auto") {
 
             if (connectedClientGuild[channel.guild] !== undefined) {
                 --connectedClientGuild[channel.guild];
-                console.log(connectedClientGuild[channel.guild]);
+
+                if (connectedClientGuild[channel.guild] <= 0) {
+                    delete connectedClientGuild[channel.guild];
+                }
             }
 
             connectedClient--;
