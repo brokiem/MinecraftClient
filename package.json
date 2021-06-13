@@ -6,7 +6,8 @@
     "discord-buttons": "^2.4.1",
     "discord.js": "^12.5.3",
     "dotenv": "^10.0.0",
-    "minecraft-server-util": "3.4.4"
+    "minecraft-server-util": "3.4.4",
+    "bad-words": "latest"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

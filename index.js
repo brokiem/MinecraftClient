@@ -7,9 +7,12 @@ const dsclient = new discord.Client();
 const {Client} = require("bedrock-protocol");
 const query = require("minecraft-server-util");
 const dsbutton = require("discord-buttons")(dsclient);
+const Filter = require('bad-words');
+const filter = new Filter();
 
 let clients = [];
 let connectedClient = 0;
+let connectedClientGuild = [];
 let debug = false;
 
 const mcversion = '1.0.0'
@@ -277,18 +280,17 @@ function connect(channel, address, port, version = "auto") {
     console.log("Connecting to " + address + " on port " + port + " with version " + version)
     channel.send(signal + " Connecting to " + address + " on port " + port + " with version " + version);
 
+    if (connectedClientGuild[channel.guild] !== undefined) {
+        ++connectedClientGuild[channel.guild];
+    } else {
+        connectedClientGuild[channel.guild] = 1;
+    }
     clients[channel] = {'connected': false, 'enableChat': true, 'hotbar_slot': 0, 'cachedFilteredTextPacket': []}
 
     query.statusBedrock(address, {
         port: parseInt(port), enableSRV: true, timeout: 5000
     }).then(() => {
-        let client = new Client({
-            host: address,
-            port: parseInt(port),
-            offline: false,
-            authTitle: '00000000441cc96b',
-            skipPing: true
-        });
+        let client = null;
 
         if (version !== "auto") {
             client = new Client({
@@ -299,16 +301,24 @@ function connect(channel, address, port, version = "auto") {
                 authTitle: '00000000441cc96b',
                 skipPing: true
             });
+        } else {
+            client = new Client({
+                host: address,
+                port: parseInt(port),
+                offline: false,
+                authTitle: '00000000441cc96b',
+                skipPing: true
+            });
         }
 
         client.connect();
         channel.send(":newspaper: Started packet reading...");
         clients[channel]["connectTimeout"] = setTimeout(function () {
             if (!clients[channel]["connected"]) {
-                channel.send(x + " Server didn't respond in 5 seconds. Something wrong happened\n" + e + " Maybe this problem happened because: Incompatible version/protocol, Packet processing error or Connection problem");
+                channel.send(x + " Server didn't respond in 10 seconds. Something wrong happened\n" + e + " Maybe this problem happened because: Incompatible version/protocol, Packet processing error or Connection problem");
                 disconnect(channel, false);
             }
-        }, 5000);
+        }, 10000);
 
         clients[channel]["intervalChat"] = setInterval(function () {
             sendCachedTextPacket(channel)
@@ -338,7 +348,7 @@ function connect(channel, address, port, version = "auto") {
         });
 
         client.on("play_status", (packet) => {
-            let message = "NULL";
+            let message = null;
             switch (packet.status) {
                 case "failed_client":
                 case "failed_spawn":
@@ -349,13 +359,25 @@ function connect(channel, address, port, version = "auto") {
                     break;
             }
 
-            if (message !== "NULL") {
+            if (message !== null) {
                 channel.send("Disconnected from the server: " + message);
                 disconnect(channel, false);
             }
         });
 
         client.on("mob_equipment", (packet) => {
+            if (debug) {
+                console.log(packet);
+            }
+        })
+
+        client.on("move_entity", (packet) => {
+            if (debug) {
+                console.log(packet);
+            }
+        })
+
+        client.on("move_player", (packet) => {
             if (debug) {
                 console.log(packet);
             }
@@ -416,8 +438,8 @@ function connect(channel, address, port, version = "auto") {
 
         client.on("transfer", (packet) => {
             channel.send(makeEmbed(e + "  **TransferPacket received**\n\nAddress: " + packet.server_address + "\nPort: " + packet.port))
-            disconnect(channel, false)
-            connect(channel, packet.server_address, packet.port)
+            disconnect(channel, false);
+            connect(channel, packet.server_address, packet.port);
         });
 
         client.once("resource_packs_info", () => {
@@ -434,7 +456,7 @@ function connect(channel, address, port, version = "auto") {
             });
 
             client.queue("client_cache_status", {enabled: false});
-            client.queue("request_chunk_radius", {chunk_radius: 2});
+            client.queue("request_chunk_radius", {chunk_radius: 1});
             client.queue("tick_sync", {request_time: BigInt(Date.now()), response_time: 0n});
         });
 
@@ -459,6 +481,11 @@ function connect(channel, address, port, version = "auto") {
 function checkMaxClient(channel) {
     if (connectedClient >= 20) {
         channel.send(makeEmbed("Clients are too busy! Please try again later."));
+        return true;
+    }
+
+    if (connectedClientGuild[channel.guild] !== undefined && connectedClientGuild[channel.guild] >= 2) {
+        channel.send(makeEmbed("Max 2 clients connected/discord guild"));
         return true;
     }
 
@@ -554,42 +581,53 @@ async function move(channel) {
     }
 
     clients[channel]["walking"] = true;
-    clients[channel]["player_position"] = {
-        x: clients[channel]["player_position"].x + await rand(-2, 2),
+    /*clients[channel]["player_position"] = {
+        x: clients[channel]["player_position"].x + await rand(-3, 3),
         y: clients[channel]["player_position"].y,
-        z: clients[channel]["player_position"].z + await rand(-2, 2)
-    }
-
-    channel.send(makeEmbed(":ski: Walking randomly to X:" + clients[channel]["player_position"].x + " Y:" + clients[channel]["player_position"].y + " Z:" + clients[channel]["player_position"].z))
+        z: clients[channel]["player_position"].z - await rand(-3, 3)
+    }*/
 
     setTimeout(function () {
         clients[channel]["walking"] = false;
     }, 2000)
 
-    clients[channel]["client"].queue("move_player", {
-        runtime_id: clients[channel]["runtime_id"],
-        position: clients[channel]["player_position"],
-        pitch: 0,
-        yaw: 0,
-        head_yaw: 0,
-        mode: 'normal',
-        on_ground: true,
-        ridden_runtime_id: 0,
-        teleport: {cause: "unknown", source_entity_type: 0},
-        tick: 0n
-    })
+    setTimeout(function () {
+        clearInterval(clients[channel]["walkingIntervalID"]);
+    }, 2000);
+
+    clients[channel]["walkingIntervalID"] = setInterval(function () {
+        clients[channel]["client"].queue("move_player", {
+            runtime_id: clients[channel]["runtime_id"],
+            position: {
+                x: clients[channel]["player_position"].x += 0.10000000000000,
+                y: clients[channel]["player_position"].y,
+                z: clients[channel]["player_position"].z += 0.10000000000000
+            },
+            pitch: rand(0, 12),
+            yaw: rand(0, 12),
+            head_yaw: rand(0, 12),
+            mode: 'normal',
+            on_ground: true,
+            ridden_runtime_id: 0,
+            teleport: {cause: "unknown", source_entity_type: 0},
+            tick: 0n
+        })
+    }, 50);
+
+    channel.send(makeEmbed(":ski: Walking randomly to X:" + clients[channel]["player_position"].x + " Y:" + clients[channel]["player_position"].y + " Z:" + clients[channel]["player_position"].z))
 }
 
 function rand(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+
 async function chat(channel, string) {
     clients[channel]["client"].queue("text", {
         type: 'chat',
         needs_translation: false,
-        source_name: string,
-        message: string,
+        source_name: filter.clean(string),
+        message: filter.clean(string),
         paramaters: undefined,
         xuid: '',
         platform_chat_id: ''
@@ -615,13 +653,19 @@ function isConnected(channel, check = true) {
     return clients[channel] !== undefined;
 }
 
-async function disconnect(channel, showMessage = true) {
-    if (!await isConnected(channel, false)) {
+function disconnect(channel, showMessage = true) {
+    if (!isConnected(channel, false)) {
         channel.send(barrier + " I haven't connected to any server yet!\n");
         return;
     }
 
     clients[channel]["client"].close()
+
+    if (connectedClientGuild[channel.guild] !== undefined) {
+        if (connectedClientGuild[channel.guild] > 0) {
+            --connectedClientGuild[channel.guild];
+        }
+    }
 
     if (showMessage) {
         channel.send(auth + " Disconnected succesfully!");
