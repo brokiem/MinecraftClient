@@ -206,7 +206,7 @@ dsclient.on("message", async message => {
                 const button = new dsbutton.MessageButton()
                     .setStyle("url")
                     .setLabel("Bot Invite Link")
-                    .setURL("https://discord.com/api/oauth2/authorize?client_id=844733770581803018&permissions=3072&scope=bot");
+                    .setURL("https://discord.com/oauth2/authorize?client_id=844733770581803018&permissions=3072&scope=bot");
 
                 await channel.send({
                     button: button,
