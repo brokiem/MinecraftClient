@@ -6,7 +6,8 @@ const discord = require("discord.js");
 const dsclient = new discord.Client();
 const {Client} = require("bedrock-protocol");
 const query = require("minecraft-server-util");
-const dsbutton = require("discord-buttons")(dsclient);
+const dsbutton = require("discord-buttons");
+dsbutton(dsclient);
 const Filter = require('bad-words');
 const filter = new Filter();
 
@@ -30,7 +31,7 @@ const activities = [
     "Minecraft"
 ];
 
-const mcversions = [
+const sup_versions = [
     "1.17.0",
     "1.16.220"
 ];
@@ -112,8 +113,8 @@ dsclient.on("message", async message => {
             case "connect":
             case "join":
                 if (args.length > 0) {
-                    if (args[2] !== undefined && !mcversions.includes(args[2])) {
-                        await channel.send(makeEmbed("Supported versions: " + mcversions.join(", ")));
+                    if (args[2] !== undefined && !sup_versions.includes(args[2])) {
+                        await channel.send(makeEmbed("Supported versions: " + sup_versions.join(", ")));
                         return;
                     }
 
@@ -159,7 +160,6 @@ dsclient.on("message", async message => {
             case "move":
             case "walk":
                 if (await isConnected(channel)) {
-                    await channel.send(reply + " Walking...");
                     await move(channel);
                 } else {
                     await channel.send(x + " I haven't connected to any server yet!");
@@ -193,7 +193,6 @@ dsclient.on("message", async message => {
                     }
                 } else {
                     await channel.send(x + " I haven't connected to any server yet!");
-
                 }
                 break;
             case "close":
@@ -203,13 +202,22 @@ dsclient.on("message", async message => {
             case "invite":
             case "stats":
             case "status":
-                const button = new dsbutton.MessageButton()
+                const invite = new dsbutton.MessageButton()
                     .setStyle("url")
-                    .setLabel("Bot Invite Link")
-                    .setURL("https://discord.com/oauth2/authorize?client_id=844733770581803018&permissions=3072&scope=bot");
+                    .setLabel("Invite")
+                    .setURL("https://discord.com/oauth2/authorize?client_id=" + dsclient.user.id + "&permissions=3072&scope=bot");
+
+                const vote = new dsbutton.MessageButton()
+                    .setStyle("url")
+                    .setLabel("Vote")
+                    .setURL("https://top.gg/bot/844733770581803018/vote");
+
+                const buttonRow = new dsbutton.MessageActionRow()
+                    .addComponent(invite)
+                    .addComponent(vote)
 
                 await channel.send({
-                    button: button,
+                    component: buttonRow,
                     embed: makeEmbed("" +
                         "**MinecraftClient** - v" + mcversion + "\n\n" +
 
@@ -233,10 +241,10 @@ dsclient.on("message", async message => {
         }
     } catch (e) {
         try {
-            await message.channel.send(x + " **An error occurred:** " + e)
+            await message.channel.send(x + " **An error occurred:** " + e);
         } catch (err) {}
 
-        console.log("Error: " + e)
+        console.log("Error: " + e);
     }
 })
 
@@ -249,10 +257,10 @@ async function ping(channel, address, port = "19132") {
     query.statusBedrock(address, {
         port: parseInt(port), enableSRV: true, timeout: 3000
     }).then((response) => {
-        channel.send(makeEmbed("**Query information**\n\n**MOTD**: " + response.motdLine1.descriptionText + "\n**Version**: " + response.version + "\n**Players**: " + response.onlinePlayers + "/" + response.maxPlayers))
+        channel.send(makeEmbed("**Query information**\n\n**MOTD**: " + response.motdLine1.descriptionText + "\n**Version**: " + response.version + "\n**Players**: " + response.onlinePlayers + "/" + response.maxPlayers));
     }).catch(() => {
         if (parseInt(port) === 19132) {
-            pingJava(channel, address, 25565)
+            pingJava(channel, address, 25565);
         }
     })
 }
@@ -261,9 +269,9 @@ async function pingJava(channel, address, port) {
     query.status(address, {
         port: parseInt(port), enableSRV: true, timeout: 5000
     }).then((response) => {
-        channel.send(makeEmbed("**Query information**\n\n**MOTD**: " + response.description.descriptionText + "\n**Version**: " + response.version + "\n**Players**: " + response.onlinePlayers + "/" + response.maxPlayers))
+        channel.send(makeEmbed("**Query information**\n\n**MOTD**: " + response.description.descriptionText + "\n**Version**: " + response.version + "\n**Players**: " + response.onlinePlayers + "/" + response.maxPlayers));
     }).catch((err) => {
-        channel.send(makeEmbed("Query failed: " + err))
+        channel.send(makeEmbed("Query failed: " + err));
     })
 }
 
@@ -321,7 +329,7 @@ function connect(channel, address, port, version = "auto") {
         }, 10000);
 
         clients[channel]["intervalChat"] = setInterval(function () {
-            sendCachedTextPacket(channel)
+            sendCachedTextPacket(channel);
         }, 5000);
         clients[channel]["maxTimeConnectedTimeout"] = setTimeout(function () {
             if (isConnected(channel, false)) {
@@ -365,30 +373,6 @@ function connect(channel, address, port, version = "auto") {
             }
         });
 
-        client.on("mob_equipment", (packet) => {
-            if (debug) {
-                console.log(packet);
-            }
-        })
-
-        client.on("move_entity", (packet) => {
-            if (debug) {
-                console.log(packet);
-            }
-        })
-
-        client.on("move_player", (packet) => {
-            if (debug) {
-                console.log(packet);
-            }
-        })
-
-        client.on("inventory_transaction", (packet) => {
-            if (debug) {
-                console.log(packet);
-            }
-        })
-
         client.on("modal_form_request", (packet) => {
             const jsonData = JSON.parse(packet.data);
             const string = "abcdefgklmr0123456789"; // minecraft color
@@ -419,7 +403,6 @@ function connect(channel, address, port, version = "auto") {
             if (debug) {
                 console.log(packet)
             }
-            //sendModalResponse(channel, "0"); // unhandled
         })
 
         client.on("text", (packet) => {
@@ -493,7 +476,7 @@ function checkMaxClient(channel) {
     }
 
     if (connectedClientGuild[channel.guild] !== undefined && connectedClientGuild[channel.guild] >= 2) {
-        channel.send(makeEmbed("Max 2 clients connected/discord guild"));
+        channel.send(makeEmbed("Oof, this Guild has reached the limit of connected clients\n!"));
         return true;
     }
 
@@ -588,12 +571,9 @@ async function move(channel) {
         return;
     }
 
+    await channel.send(reply + " Walking...");
+
     clients[channel]["walking"] = true;
-    /*clients[channel]["player_position"] = {
-        x: clients[channel]["player_position"].x + await rand(-3, 3),
-        y: clients[channel]["player_position"].y,
-        z: clients[channel]["player_position"].z - await rand(-3, 3)
-    }*/
 
     setTimeout(function () {
         clients[channel]["walking"] = false;
@@ -628,7 +608,6 @@ async function move(channel) {
 function rand(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-
 
 async function chat(channel, string) {
     clients[channel]["client"].queue("text", {
