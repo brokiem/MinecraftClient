@@ -38,7 +38,7 @@ const sup_versions = [
     "1.16.220"
 ];
 
-dsclient.login("ODUyNDkwNDg1Mjc2NDc1NDAy.YMHlog.LdCun1o62U3KiRK45K1pfPcast0").catch(() => {
+dsclient.login().catch(() => {
     console.error("The bot token was incorrect.");
 });
 
