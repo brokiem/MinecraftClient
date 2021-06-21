@@ -26,6 +26,7 @@ const reply = "<:reply:849498663956774942>";
 const barrier = "<:barrier:849501525596438539>";
 const slash = "<:slash:856511320421302273>";
 const botdev = "<:botdev:856511739972550666>";
+const settings = "<:settings:856517667128999947>";
 
 const activities = [
     "*invite",
@@ -89,43 +90,37 @@ dsclient.on("message", async message => {
                 }
                 break;
             case "help":
-                await channel.send(makeEmbed("" +
-                    "**Command List**\n\n○ " +
-                    "``*query <address> <port>``  **~**  Query a Minecraft server\n○ " +
-                    "``*join <address> <port> <version>`` **~**  Join to Minecraft server\n○ " +
-                    "``*chat <message>``  **~**  Send chat to connected server\n○ " +
-                    "``*enablechat <value>``\n○ " +
-                    "``*form <button id>``  **~**  Send form resp to connected server\n○ " +
-                    "``*disconnect``  **~**  Disconnect from connected server\n○ " +
-                    "``*invite``  **~**  Get bot invite link\n\n" +
+                const helpEmbed1 = new discord.MessageEmbed()
+                    .setTitle(slash + " Command List\n\n")
+                    .addField("*query <address> <port>", "Query a Minecraft server (java or bedrock)")
+                    .addField("*join <address> <port> <version>", "Join to Minecraft server (bedrock)")
+                    .addField("*chat <message>", "Send chat to connected server")
+                    .addField("*enablechat <value>", "Enable server chat to discord channel")
+                    .addField("*form <button id>", "Send form resp to connected server")
+                    .addField("*disconnect", "Disconnect from connected server")
+                    .addField("*invite", "Get bot invite link");
 
-                    "**Command Example**\n\n○ " +
-
-                    "*query play.hypixel.net 25565\n○ " +
-                    "*join geo.hivebedrock.network 19132\n○ " +
-                    "*chat hello world!\n○ " +
-                    "*enablechat false\n○ " +
-                    "*form 0"));
+                await channel.send(helpEmbed1);
                 break;
             case "query":
                 if (args.length > 0) {
                     await channel.send(signal + " Getting query info...")
-                    await ping(channel, args[0], isNaN(args[1]) ? 19132 : args[1]);
+                    await ping(channel, args[0], isNaN(parseInt(args[1])) ? 19132 : args[1]);
                 } else {
-                    await channel.send("[Usage] *query <address> <port>\nExample: *query play.hypixel.net 25565");
+                    await channel.send(makeEmbed(slash + " **Usage:** *query <address> <port>"));
                 }
                 break;
             case "connect":
             case "join":
                 if (args.length > 0) {
                     if (args[2] !== undefined && !sup_versions.includes(args[2])) {
-                        await channel.send(makeEmbed("Supported versions: " + sup_versions.join(", ")));
+                        await channel.send(makeEmbed(settings + " Supported versions: " + sup_versions.join(", ")));
                         return;
                     }
 
-                    connect(channel, args[0], isNaN(args[1]) ? 19132 : args[1], args[2] ?? "auto");
+                    connect(channel, args[0], isNaN(parseInt(args[1])) ? 19132 : args[1], args[2] ?? "auto");
                 } else {
-                    await channel.send("**Usage:** *connect <address> <port> <version>");
+                    await channel.send(makeEmbed(slash + " **Usage:** *connect <address> <port> <version>"));
                 }
                 break;
             case "chat":
@@ -140,7 +135,7 @@ dsclient.on("message", async message => {
                             await channel.send(reply + " Sending message...");
                         }
                     } else {
-                        await channel.send(barrier + " Please enter the message!");
+                        await channel.send(makeEmbed(slash + " **Usage:** *chat <message>"));
                     }
                 } else {
                     await channel.send(barrier + " I haven't connected to any server yet!");
