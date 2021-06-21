@@ -105,7 +105,7 @@ dsclient.on("message", async message => {
             case "query":
                 if (args.length > 0) {
                     await channel.send(signal + " Getting query info...")
-                    await ping(channel, args[0], isNaN(parseInt(args[1])) ? 19132 : args[1]);
+                    await ping(channel, args[0], isNaN(args[1]) ? 19132 : args[1]);
                 } else {
                     await channel.send(makeEmbed(slash + " **Usage:** *query <address> <port>"));
                 }
@@ -118,7 +118,7 @@ dsclient.on("message", async message => {
                         return;
                     }
 
-                    connect(channel, args[0], isNaN(parseInt(args[1])) ? 19132 : args[1], args[2] ?? "auto");
+                    connect(channel, args[0], isNaN(args[1]) ? 19132 : args[1], args[2] ?? "auto");
                 } else {
                     await channel.send(makeEmbed(slash + " **Usage:** *connect <address> <port> <version>"));
                 }
