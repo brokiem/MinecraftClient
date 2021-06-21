@@ -24,11 +24,13 @@ const auth = "<:auth:849493635820158977>"
 const signal = "<:stage:849498188096077834>";
 const reply = "<:reply:849498663956774942>";
 const barrier = "<:barrier:849501525596438539>";
+const slash = "<:slash:856511320421302273>";
+const botdev = "<:botdev:856511739972550666>";
 
 const activities = [
-    "*help",
     "*invite",
-    "Minecraft"
+    "Minecraft",
+    "*help | Minecraft ❤"
 ];
 
 const sup_versions = [
@@ -36,7 +38,7 @@ const sup_versions = [
     "1.16.220"
 ];
 
-dsclient.login().catch(() => {
+dsclient.login("ODUyNDkwNDg1Mjc2NDc1NDAy.YMHlog.LdCun1o62U3KiRK45K1pfPcast0").catch(() => {
     console.error("The bot token was incorrect.");
 });
 
@@ -45,7 +47,9 @@ dsclient.on("ready", async () => {
 
     let i = 0;
     setInterval(() => {
-        dsclient.user.setActivity(activities[i]);
+        if (activities[i] !== undefined) {
+            dsclient.user.setActivity(activities[i]);
+        }
 
         i <= activities.length ? ++i : i = 0;
     }, 30000);
@@ -58,17 +62,18 @@ dsclient.on("ready", async () => {
 
 dsclient.on("message", async message => {
     try {
+        if (!message.guild.me.hasPermission("SEND_MESSAGES")) {
+            return;
+        }
+
         if (message.content.includes(dsclient.user.id) && message.channel.type === "text" && !message.author.bot) {
-            await message.channel.send(makeEmbed("My Prefix is  *")).then(msg => {
-                try {
-                    msg.delete({timeout: 8000});
-                } catch (e) {
-                }
+            await message.channel.send(makeEmbed(slash + " My prefix is * (Asterisk)")).then(msg => {
+                msg.delete({timeout: 10000});
             });
             return;
         }
 
-        if (message.author.bot || !message.content.startsWith("*") || message.channel.type !== "text") return;
+        if (message.author.bot || !message.content.startsWith("%") || message.channel.type !== "text") return;
 
         const args = message.content.slice(1).trim().split(/ +/);
         const command = args.shift().toLowerCase();
@@ -97,7 +102,7 @@ dsclient.on("message", async message => {
                     "**Command Example**\n\n○ " +
 
                     "*query play.hypixel.net 25565\n○ " +
-                    "*join play.nethergames.org 19132\n○ " +
+                    "*join geo.hivebedrock.network 19132\n○ " +
                     "*chat hello world!\n○ " +
                     "*enablechat false\n○ " +
                     "*form 0"));
@@ -214,12 +219,12 @@ dsclient.on("message", async message => {
 
                 const buttonRow = new dsbutton.MessageActionRow()
                     .addComponent(invite)
-                    .addComponent(vote)
+                    .addComponent(vote);
 
                 await channel.send({
                     component: buttonRow,
                     embed: makeEmbed("" +
-                        "**MinecraftClient** - v" + mcversion + "\n\n" +
+                        botdev + " **MinecraftClient** - v" + mcversion + "\n\n" +
 
                         "RAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB\n" +
                         "Uptime: " + await getUptime() + "\n\n" +
@@ -240,9 +245,7 @@ dsclient.on("message", async message => {
                 break;
         }
     } catch (e) {
-        try {
-            await message.channel.send(x + " **An error occurred:** " + e);
-        } catch (err) {}
+        await message.channel.send(x + " **An error occurred:** " + e.toString());
 
         console.log("Error: " + e);
     }
@@ -345,6 +348,7 @@ function connect(channel, address, port, version = "auto") {
             clients[channel]["runtime_id"] = packet.runtime_id;
             clients[channel]["runtime_entity_id"] = packet.runtime_entity_id;
             clients[channel]["player_position"] = packet.spawn_position;
+            clients[channel]["player_position"].y += 1.62;
 
             channel.send(":signal_strength: Successfully connected to the server!~");
             clients[channel]["connected"] = true;
@@ -448,20 +452,9 @@ function connect(channel, address, port, version = "auto") {
         });
 
         client.once("close", () => {
-            clearInterval(clients[channel]["intervalChat"])
-            clearTimeout(clients[channel]["maxTimeConnectedTimeout"])
-
-            if (connectedClientGuild[channel.guild] !== undefined) {
-                --connectedClientGuild[channel.guild];
-
-                if (connectedClientGuild[channel.guild] <= 0) {
-                    delete connectedClientGuild[channel.guild];
-                }
+            if (isConnected(channel)) {
+                channel.send(x + " Disconnected: Client closed!");
             }
-
-            connectedClient--;
-            delete clients[channel];
-            channel.send(x + " Disconnected: Client closed!");
         });
     }).catch((error) => {
         delete clients[channel];
@@ -476,7 +469,7 @@ function checkMaxClient(channel) {
     }
 
     if (connectedClientGuild[channel.guild] !== undefined && connectedClientGuild[channel.guild] >= 2) {
-        channel.send(makeEmbed("Oof, this Guild has reached the limit of connected clients\n!"));
+        channel.send(makeEmbed("Oof, this Guild has reached the limit of connected clients!"));
         return true;
     }
 
@@ -613,7 +606,7 @@ async function chat(channel, string) {
     clients[channel]["client"].queue("text", {
         type: 'chat',
         needs_translation: false,
-        source_name: filter.clean(string),
+        source_name: "MClient890",
         message: filter.clean(string),
         paramaters: undefined,
         xuid: '',
@@ -647,6 +640,20 @@ function disconnect(channel, showMessage = true) {
     }
 
     clients[channel]["client"].close();
+
+    clearInterval(clients[channel]["intervalChat"]);
+    clearTimeout(clients[channel]["maxTimeConnectedTimeout"]);
+
+    if (connectedClientGuild[channel.guild] !== undefined) {
+        --connectedClientGuild[channel.guild];
+
+        if (connectedClientGuild[channel.guild] <= 0) {
+            delete connectedClientGuild[channel.guild];
+        }
+    }
+
+    connectedClient--;
+    delete clients[channel];
 
     if (showMessage) {
         channel.send(auth + " Disconnected succesfully!");
