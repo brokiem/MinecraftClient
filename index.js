@@ -74,7 +74,7 @@ dsclient.on("message", async message => {
             return;
         }
 
-        if (message.author.bot || !message.content.startsWith("%") || message.channel.type !== "text") return;
+        if (message.author.bot || !message.content.startsWith("*") || message.channel.type !== "text") return;
 
         const args = message.content.slice(1).trim().split(/ +/);
         const command = args.shift().toLowerCase();
@@ -138,7 +138,7 @@ dsclient.on("message", async message => {
                         await channel.send(makeEmbed(slash + " **Usage:** *chat <message>"));
                     }
                 } else {
-                    await channel.send(barrier + " I haven't connected to any server yet!");
+                    await channel.send(x + " I haven't connected to any server yet!");
                 }
                 break;
             case "hotbar":
@@ -148,14 +148,14 @@ dsclient.on("message", async message => {
                         await hotbar(channel, args.join(" "));
                         await channel.send(reply + " Set hotbar to slot " + args.join(" "));
                     } else {
-                        await channel.send(barrier + " Please enter the slot number!");
+                        await channel.send(x + " Please enter the slot number!");
                     }
                 } else {
                     await channel.send(x + " I haven't connected to any server yet!");
                 }
                 break;
             case "interact":
-                await interact(channel)
+                await interact(channel);
                 break;
             case "move":
             case "walk":
@@ -174,7 +174,7 @@ dsclient.on("message", async message => {
                             clients[channel]["formId"] = undefined;
                         }
                     } else {
-                        await channel.send(barrier + " No ModalFormRequestPacket found!");
+                        await channel.send(x + " No ModalFormRequestPacket found!");
                     }
                 } else {
                     await channel.send(x + " I haven't connected to any server yet!");
@@ -212,12 +212,8 @@ dsclient.on("message", async message => {
                     .setLabel("Vote")
                     .setURL("https://top.gg/bot/844733770581803018/vote");
 
-                const buttonRow = new dsbutton.MessageActionRow()
-                    .addComponent(invite)
-                    .addComponent(vote);
-
                 await channel.send({
-                    component: buttonRow,
+                    buttons: [invite, vote],
                     embed: makeEmbed("" +
                         botdev + " **MinecraftClient** - v" + mcversion + "\n\n" +
 
@@ -448,8 +444,10 @@ function connect(channel, address, port, version = "auto") {
 
         client.once("close", () => {
             if (isConnected(channel)) {
-                channel.send(x + " Disconnected: Client closed!");
+                disconnect(channel);
             }
+
+            channel.send(x + " Disconnected: Client closed!");
         });
     }).catch((error) => {
         delete clients[channel];
@@ -620,8 +618,8 @@ async function sendCommand(channel, string) {
     });
 }
 
-function isConnected(channel, check = true) {
-    if (check) {
+function isConnected(channel, checkConnected = true) {
+    if (checkConnected) {
         return clients[channel] !== undefined && clients[channel]["connected"]
     }
 
@@ -630,11 +628,11 @@ function isConnected(channel, check = true) {
 
 function disconnect(channel, showMessage = true) {
     if (!isConnected(channel, false)) {
-        channel.send(barrier + " I haven't connected to any server yet!\n");
+        channel.send(x + " I haven't connected to any server yet!\n");
         return;
     }
 
-    clients[channel]["client"].close();
+    const client = clients[channel]["client"];
 
     clearInterval(clients[channel]["intervalChat"]);
     clearTimeout(clients[channel]["maxTimeConnectedTimeout"]);
@@ -649,6 +647,8 @@ function disconnect(channel, showMessage = true) {
 
     connectedClient--;
     delete clients[channel];
+
+    client.close();
 
     if (showMessage) {
         channel.send(auth + " Disconnected succesfully!");
