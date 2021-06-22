@@ -3,7 +3,7 @@
 require("dotenv").config();
 
 const discord = require("discord.js");
-const dsclient = new discord.Client();
+const dsclient = new discord.Client({disableMentions: "all"});
 const {Client} = require("bedrock-protocol");
 const query = require("minecraft-server-util");
 const dsbutton = require("discord-buttons");
@@ -16,7 +16,7 @@ let connectedClient = 0;
 let connectedClientGuild = [];
 let debug = false;
 
-const mcversion = '1.0.0'
+const mcversion = '1.0.1'
 
 const x = "<:brokiem_x:849486576727097384>";
 const e = "<:enter:849493018910261259>";
@@ -31,7 +31,7 @@ const settings = "<:settings:856517667128999947>";
 const activities = [
     "*invite",
     "Minecraft",
-    "*help | Minecraft ❤"
+    "*help"
 ];
 
 const sup_versions = [
@@ -68,7 +68,7 @@ dsclient.on("message", async message => {
         }
 
         if (message.content.includes(dsclient.user.id) && message.channel.type === "text" && !message.author.bot) {
-            await message.channel.send(makeEmbed(slash + " My prefix is * (Asterisk)")).then(msg => {
+            await message.channel.send(makeEmbed(slash + " My prefix is * (Asterisk) | *help")).then(msg => {
                 msg.delete({timeout: 10000});
             });
             return;
@@ -92,6 +92,7 @@ dsclient.on("message", async message => {
             case "help":
                 const helpEmbed1 = new discord.MessageEmbed()
                     .setTitle(slash + " Command List\n\n")
+                    .setThumbnail("https://cdn.discordapp.com/attachments/833621011097845830/856845502104076289/856511320421302273.png")
                     .addField("*query <address> <port>", "Query a Minecraft server (java or bedrock)")
                     .addField("*join <address> <port> <version>", "Join to Minecraft server (bedrock)")
                     .addField("*chat <message>", "Send chat to connected server")
@@ -398,7 +399,7 @@ function connect(channel, address, port, version = "auto") {
             if (debug) {
                 console.log(packet)
             }
-        })
+        });
 
         client.on("text", (packet) => {
             if (clients[channel]["enableChat"]) {
@@ -412,7 +413,7 @@ function connect(channel, address, port, version = "auto") {
                     clients[channel]["cachedFilteredTextPacket"].push(clients[channel]["filteredTextPacket"]);
                 }
             }
-        })
+        });
 
         client.on("transfer", (packet) => {
             channel.send(makeEmbed(e + "  **TransferPacket received**\n\nAddress: " + packet.server_address + "\nPort: " + packet.port))
@@ -451,7 +452,7 @@ function connect(channel, address, port, version = "auto") {
         });
     }).catch((error) => {
         delete clients[channel];
-        channel.send(x + " Unable to connect to [" + address + "/" + port + "]. " + error.message);
+        channel.send(x + " Unable to connect to " + address + " " + port + ": " + error.message);
     });
 }
 
