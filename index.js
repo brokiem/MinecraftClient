@@ -80,7 +80,7 @@ dsclient.on("message", async message => {
         const command = args.shift().toLowerCase();
         const channel = message.channel;
 
-        console.log("Command '" + command + "' by " + message.author.tag + " on " + message.guild.name + " | " + new Date().toLocaleString());
+        //console.log("Command '" + command + "' by " + message.author.tag + " on " + message.guild.name + " | " + new Date().toLocaleString());
 
         switch (command) {
             case "debug":
@@ -438,13 +438,13 @@ function connect(channel, address, port, version = "auto") {
             client.queue("tick_sync", {request_time: BigInt(Date.now()), response_time: 0n});
         });
 
-        client.once("disconnect", (packet) => {
+        client.once("kick", (packet) => {
             channel.send(x + " Disconnected from server:\n```" + packet.message + "```");
         });
 
         client.once("close", () => {
             if (isConnected(channel)) {
-                disconnect(channel);
+                disconnect(channel, false);
             }
 
             channel.send(x + " Disconnected: Client closed!");
@@ -632,7 +632,7 @@ function disconnect(channel, showMessage = true) {
         return;
     }
 
-    const client = clients[channel]["client"];
+    let client = clients[channel]["client"];
 
     clearInterval(clients[channel]["intervalChat"]);
     clearTimeout(clients[channel]["maxTimeConnectedTimeout"]);
@@ -649,6 +649,7 @@ function disconnect(channel, showMessage = true) {
     delete clients[channel];
 
     client.close();
+    client = null;
 
     if (showMessage) {
         channel.send(auth + " Disconnected succesfully!");
