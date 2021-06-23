@@ -13,7 +13,6 @@ const filter = new Filter();
 
 let clients = [];
 let connectedClient = 0;
-let connectedClientGuild = [];
 let debug = false;
 
 const mcversion = '1.0.1'
@@ -283,10 +282,10 @@ function connect(channel, address, port, version = "auto") {
     console.log("Connecting to " + address + " on port " + port + " with version " + version)
     channel.send(signal + " Connecting to " + address + " on port " + port + " with version " + version);
 
-    if (connectedClientGuild[channel.guild] !== undefined) {
-        ++connectedClientGuild[channel.guild];
+    if (clients[channel.guild] !== undefined) {
+        ++clients[channel.guild];
     } else {
-        connectedClientGuild[channel.guild] = 1;
+        clients[channel.guild] = 1;
     }
     clients[channel] = {'connected': false, 'enableChat': true, 'hotbar_slot': 0, 'cachedFilteredTextPacket': []}
 
@@ -451,7 +450,16 @@ function connect(channel, address, port, version = "auto") {
             channel.send(x + " Disconnected: Client closed!");
         });
     }).catch((error) => {
+        if (clients[channel.guild] !== undefined) {
+            --clients[channel.guild];
+
+            if (clients[channel.guild] <= 0) {
+                delete clients[channel.guild];
+            }
+        }
+
         delete clients[channel];
+
         channel.send(x + " Unable to connect to " + address + " " + port + ": " + error.message);
     });
 }
@@ -462,8 +470,8 @@ function checkMaxClient(channel) {
         return true;
     }
 
-    if (connectedClientGuild[channel.guild] !== undefined && connectedClientGuild[channel.guild] >= 2) {
-        channel.send(makeEmbed("Oof, this Guild has reached the limit of connected clients!"));
+    if (clients[channel.guild] !== undefined && clients[channel.guild] >= 2) {
+        channel.send(makeEmbed(`Oof, this Guild has reached the limit of connected clients (${clients[channel.guild]})!`));
         return true;
     }
 
@@ -554,7 +562,7 @@ async function move(channel) {
     }
 
     if (clients[channel]["walking"] !== undefined && clients[channel]["walking"]) {
-        channel.send(x + " Please wait 2 seconds before walking again!");
+        channel.send(x + " Please wait 3 seconds before walking again!");
         return;
     }
 
@@ -564,7 +572,7 @@ async function move(channel) {
 
     setTimeout(function () {
         clients[channel]["walking"] = false;
-    }, 2000)
+    }, 3000)
 
     setTimeout(function () {
         clearInterval(clients[channel]["walkingIntervalID"]);
@@ -621,7 +629,7 @@ async function sendCommand(channel, string) {
 
 function isConnected(channel, checkConnected = true) {
     if (checkConnected) {
-        return clients[channel] !== undefined && clients[channel]["connected"]
+        return clients[channel] !== undefined && clients[channel]["connected"];
     }
 
     return clients[channel] !== undefined;
@@ -638,11 +646,11 @@ function disconnect(channel, showMessage = true) {
     clearInterval(clients[channel]["intervalChat"]);
     clearTimeout(clients[channel]["maxTimeConnectedTimeout"]);
 
-    if (connectedClientGuild[channel.guild] !== undefined) {
-        --connectedClientGuild[channel.guild];
+    if (clients[channel.guild] !== undefined) {
+        --clients[channel.guild];
 
-        if (connectedClientGuild[channel.guild] <= 0) {
-            delete connectedClientGuild[channel.guild];
+        if (clients[channel.guild] <= 0) {
+            delete clients[channel.guild];
         }
     }
 
