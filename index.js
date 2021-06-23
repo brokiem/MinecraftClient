@@ -10,6 +10,8 @@ const dsbutton = require("discord-buttons");
 dsbutton(dsclient);
 const Filter = require('bad-words');
 const filter = new Filter();
+const SegfaultHandler = require('segfault-handler');
+SegfaultHandler.registerHandler('crash.log');
 
 let clients = [];
 let connectedClient = 0;
@@ -38,7 +40,7 @@ const sup_versions = [
     "1.16.220"
 ];
 
-dsclient.login().catch(() => {
+dsclient.login("ODUyNDkwNDg1Mjc2NDc1NDAy.YMHlog.GThMgeEn5_lnKaNONC6XkCdfsMw").catch(() => {
     console.error("The bot token was incorrect.");
 });
 
