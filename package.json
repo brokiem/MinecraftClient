@@ -3,12 +3,10 @@
   "version": "1.1.0",
   "dependencies": {
     "bedrock-protocol": "^3.4.0",
-    "discord-buttons": "^3.2.1",
     "discord.js": "13.0.0-dev.0d0c8f07f2535dd315ca95abe35e848c13d0ddf5",
     "dotenv": "^10.0.0",
     "minecraft-server-util": "3.4.4",
-    "bad-words": "latest",
-    "raknet-native": "^1.0.5"
+    "bad-words": "latest"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
