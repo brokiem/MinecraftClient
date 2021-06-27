@@ -73,7 +73,7 @@ dsclient.on("message", message => {
             return;
         }
 
-        if (message.author.bot || !message.content.startsWith("!") || message.channel.type !== "text") return;
+        if (message.author.bot || !message.content.startsWith("*") || message.channel.type !== "text") return;
 
         const args = message.content.slice(1).trim().split(/ +/);
         const command = args.shift().toLowerCase();
@@ -141,7 +141,7 @@ dsclient.on("message", message => {
                     channel.send(x + " I haven't connected to any server yet!");
                 }
                 break;
-            case "hotbar":
+            /*case "hotbar":
             case "slot":
                 if (isConnected(channel)) {
                     if (args.length > 0) {
@@ -156,7 +156,7 @@ dsclient.on("message", message => {
                 break;
             case "interact":
                 interact(channel);
-                break;
+                break;*/
             case "move":
             case "walk":
                 if (isConnected(channel)) {
@@ -242,7 +242,7 @@ dsclient.on("message", message => {
 
 function ping(channel, address, port = "19132") {
     if (parseInt(port) === 25565) {
-        pingJava(channel, address, 25565)
+        pingJava(channel, address, 25565);
         return;
     }
 
@@ -290,7 +290,13 @@ function connect(channel, address, port, version = "auto") {
     query.statusBedrock(address, {
         port: parseInt(port), enableSRV: true, timeout: 5000
     }).then(() => {
-        let client = null;
+        let client = new Client({
+            host: address,
+            port: parseInt(port),
+            offline: false,
+            authTitle: '00000000441cc96b',
+            skipPing: true
+        });
 
         if (version !== "auto") {
             client = new Client({
@@ -301,21 +307,13 @@ function connect(channel, address, port, version = "auto") {
                 authTitle: '00000000441cc96b',
                 skipPing: true
             });
-        } else {
-            client = new Client({
-                host: address,
-                port: parseInt(port),
-                offline: false,
-                authTitle: '00000000441cc96b',
-                skipPing: true
-            });
         }
 
         client.connect();
         channel.send(":newspaper: Started packet reading...");
         clients[channel]["connectTimeout"] = setTimeout(function () {
             if (!clients[channel]["connected"]) {
-                channel.send(x + " Server didn't respond in 10 seconds. Something wrong happened\n" + e + " Maybe this problem happened because: Incompatible version/protocol, Packet processing error or Connection problem");
+                channel.send(x + " Server didn't respond in 10 seconds. Something wrong happened\n" + e + " Maybe this problem happened because: Incompatible version/protocol, packet processing error or connection problem");
                 disconnect(channel, false);
             }
         }, 10000);
@@ -326,7 +324,7 @@ function connect(channel, address, port, version = "auto") {
         clients[channel]["maxTimeConnectedTimeout"] = setTimeout(function () {
             if (isConnected(channel, false)) {
                 channel.send(x + " Disconnected because automatically disconnected every 20 minutes")
-                disconnect(channel);
+                disconnect(channel, false);
             }
         }, 1200000);
 
@@ -390,7 +388,7 @@ function connect(channel, address, port, version = "auto") {
 
                 channel.send({embeds: [makeEmbed(text + "```" + buttons.join("\n") + "```" + "\nType ( *form <button id> ) to response")]});
             } else {
-                channel.send(x + " I can't handle custom form yet, you can use ' *form null ' to close the form");
+                channel.send(x + " I can't handle custom form yet, Use ' *form null ' to close the form");
             }
 
             if (debug) {
@@ -464,7 +462,7 @@ function connect(channel, address, port, version = "auto") {
 
 function checkMaxClient(channel) {
     if (connectedClient >= 20) {
-        channel.send({embeds: [makeEmbed("Clients are too busy! Please try again later.")]});
+        channel.send({embeds: [makeEmbed("All Clients are busy! Please try again later.")]});
         return true;
     }
 
