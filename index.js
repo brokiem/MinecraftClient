@@ -3,21 +3,17 @@
 require("dotenv").config();
 
 const discord = require("discord.js");
-const dsclient = new discord.Client({disableMentions: "all"});
+const dsclient = new discord.Client({intents: [discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_MESSAGES]});
 const {Client} = require("bedrock-protocol");
 const query = require("minecraft-server-util");
-const dsbutton = require("discord-buttons");
-dsbutton(dsclient);
 const Filter = require('bad-words');
 const filter = new Filter();
-const SegfaultHandler = require('segfault-handler');
-SegfaultHandler.registerHandler('crash.log');
 
 let clients = [];
 let connectedClient = 0;
 let debug = false;
 
-const mcversion = '1.0.1'
+const mcversion = '1.1.0'
 
 const x = "<:brokiem_x:849486576727097384>";
 const e = "<:enter:849493018910261259>";
@@ -40,12 +36,12 @@ const sup_versions = [
     "1.16.220"
 ];
 
-dsclient.login("ODUyNDkwNDg1Mjc2NDc1NDAy.YMHlog.GThMgeEn5_lnKaNONC6XkCdfsMw").catch(() => {
+dsclient.login().catch(() => {
     console.error("The bot token was incorrect.");
 });
 
-dsclient.on("ready", async () => {
-    await dsclient.user.setStatus("online");
+dsclient.on("ready", () => {
+    dsclient.user.setStatus("online");
 
     let i = 0;
     setInterval(() => {
@@ -62,20 +58,22 @@ dsclient.on("ready", async () => {
     // console.log("Servers: (" + dsclient.guilds.cache.size + ")\n - " + dsclient.guilds.cache.array().join("\n - "))
 });
 
-dsclient.on("message", async message => {
+dsclient.on("message", message => {
     try {
-        if (!message.guild.me.hasPermission("SEND_MESSAGES")) {
+        if (!message.guild.me.permissions.has("SEND_MESSAGES")) {
             return;
         }
 
         if (message.content.includes(dsclient.user.id) && message.channel.type === "text" && !message.author.bot) {
-            await message.channel.send(makeEmbed(slash + " My prefix is * (Asterisk) | *help")).then(msg => {
-                msg.delete({timeout: 10000});
+            message.channel.send({embeds: [makeEmbed(slash + " My prefix is * (Asterisk) | *help")]}).then(msg => {
+                setTimeout(function () {
+                    msg.delete();
+                }, 10000);
             });
             return;
         }
 
-        if (message.author.bot || !message.content.startsWith("*") || message.channel.type !== "text") return;
+        if (message.author.bot || !message.content.startsWith("!") || message.channel.type !== "text") return;
 
         const args = message.content.slice(1).trim().split(/ +/);
         const command = args.shift().toLowerCase();
@@ -87,7 +85,7 @@ dsclient.on("message", async message => {
             case "debug":
                 if (message.author.id === "548120702373593090") {
                     debug = !debug;
-                    await channel.send("Debug successfully " + (debug ? "enabled" : "disabled"));
+                    channel.send("Debug successfully " + (debug ? "enabled" : "disabled"));
                 }
                 break;
             case "help":
@@ -102,158 +100,156 @@ dsclient.on("message", async message => {
                     .addField("*disconnect", "Disconnect from connected server")
                     .addField("*invite", "Get bot invite link");
 
-                await channel.send(helpEmbed1);
+                channel.send({embeds: [helpEmbed1]});
                 break;
             case "query":
                 if (args.length > 0) {
-                    await channel.send(signal + " Getting query info...")
-                    await ping(channel, args[0], isNaN(args[1]) ? 19132 : args[1]);
+                    channel.send(signal + " Getting query info...");
+                    ping(channel, args[0], isNaN(args[1]) ? 19132 : args[1]);
                 } else {
-                    await channel.send(makeEmbed(slash + " **Usage:** *query <address> <port>"));
+                    channel.send({embeds: [makeEmbed(slash + " **Usage:** *query <address> <port>")]});
                 }
                 break;
             case "connect":
             case "join":
                 if (args.length > 0) {
                     if (args[2] !== undefined && !sup_versions.includes(args[2])) {
-                        await channel.send(makeEmbed(settings + " Supported versions: " + sup_versions.join(", ")));
+                        channel.send({embeds: [makeEmbed(settings + " Supported versions: " + sup_versions.join(", "))]});
                         return;
                     }
 
                     connect(channel, args[0], isNaN(args[1]) ? 19132 : args[1], args[2] ?? "auto");
                 } else {
-                    await channel.send(makeEmbed(slash + " **Usage:** *connect <address> <port> <version>"));
+                    channel.send({embeds: [makeEmbed(slash + " **Usage:** *connect <address> <port> <version>")]});
                 }
                 break;
             case "chat":
             case "message":
-                if (await isConnected(channel)) {
+                if (isConnected(channel)) {
                     if (args.length > 0) {
                         if (args.join(" ").charAt(0) === "/") {
-                            await sendCommand(channel, args.join(" "));
-                            await channel.send(reply + " Sending command...");
+                            sendCommand(channel, args.join(" "));
+                            channel.send(reply + " Sending command...");
                         } else {
-                            await chat(channel, args.join(" "));
-                            await channel.send(reply + " Sending message...");
+                            chat(channel, args.join(" "));
+                            channel.send(reply + " Sending message...");
                         }
                     } else {
-                        await channel.send(makeEmbed(slash + " **Usage:** *chat <message>"));
+                        channel.send({embeds: [makeEmbed(slash + " **Usage:** *chat <message>")]});
                     }
                 } else {
-                    await channel.send(x + " I haven't connected to any server yet!");
+                    channel.send(x + " I haven't connected to any server yet!");
                 }
                 break;
             case "hotbar":
             case "slot":
-                if (await isConnected(channel)) {
+                if (isConnected(channel)) {
                     if (args.length > 0) {
-                        await hotbar(channel, args.join(" "));
-                        await channel.send(reply + " Set hotbar to slot " + args.join(" "));
+                        hotbar(channel, args.join(" "));
+                        channel.send(reply + " Set hotbar to slot " + args.join(" "));
                     } else {
-                        await channel.send(x + " Please enter the slot number!");
+                        channel.send(x + " Please enter the slot number!");
                     }
                 } else {
-                    await channel.send(x + " I haven't connected to any server yet!");
+                    channel.send(x + " I haven't connected to any server yet!");
                 }
                 break;
             case "interact":
-                await interact(channel);
+                interact(channel);
                 break;
             case "move":
             case "walk":
-                if (await isConnected(channel)) {
-                    await move(channel);
+                if (isConnected(channel)) {
+                    move(channel);
                 } else {
-                    await channel.send(x + " I haven't connected to any server yet!");
+                    channel.send(x + " I haven't connected to any server yet!");
                 }
                 break;
             case "form":
-                if (await isConnected(channel)) {
+                if (isConnected(channel)) {
                     if (clients[channel]["formId"] !== undefined) {
                         if (args.length > 0) {
-                            await channel.send(reply + " Sending modal form response");
-                            await sendModalResponse(channel, args.join(" "));
+                            channel.send(reply + " Sending modal form response");
+                            sendModalResponse(channel, args.join(" "));
                             clients[channel]["formId"] = undefined;
                         }
                     } else {
-                        await channel.send(x + " No ModalFormRequestPacket found!");
+                        channel.send(x + " No ModalFormRequestPacket found!");
                     }
                 } else {
-                    await channel.send(x + " I haven't connected to any server yet!");
+                    channel.send(x + " I haven't connected to any server yet!");
                 }
                 break;
             case "enablechat":
-                if (await isConnected(channel)) {
+                if (isConnected(channel)) {
                     if (args.length > 0) {
                         if (args[0] === "true") {
                             clients[channel]["enableChat"] = true;
-                            await channel.send(":ballot_box_with_check: Chat successfully enabled");
+                            channel.send(":ballot_box_with_check: Chat successfully enabled");
                         } else if (args[0] === "false") {
                             clients[channel]["enableChat"] = false;
-                            await channel.send(":ballot_box_with_check: Chat successfully disabled");
+                            channel.send(":ballot_box_with_check: Chat successfully disabled");
                         }
                     }
                 } else {
-                    await channel.send(x + " I haven't connected to any server yet!");
+                    channel.send(x + " I haven't connected to any server yet!");
                 }
                 break;
             case "close":
             case "disconnect":
-                await disconnect(channel);
+                disconnect(channel);
                 break;
             case "invite":
             case "stats":
             case "status":
-                const invite = new dsbutton.MessageButton()
-                    .setStyle("url")
-                    .setLabel("Invite")
+                const invite = new discord.MessageButton().setStyle("LINK").setLabel("Invite")
                     .setURL("https://discord.com/oauth2/authorize?client_id=" + dsclient.user.id + "&permissions=3072&scope=bot");
 
-                const vote = new dsbutton.MessageButton()
-                    .setStyle("url")
-                    .setLabel("Vote")
+                const vote = new discord.MessageButton().setStyle("LINK").setLabel("Vote")
                     .setURL("https://top.gg/bot/844733770581803018/vote");
 
-                await channel.send({
-                    buttons: [invite, vote],
-                    embed: makeEmbed("" +
+                const row = new discord.MessageActionRow().addComponents(invite).addComponents(vote);
+
+                channel.send({
+                    components: [row],
+                    embeds: [makeEmbed("" +
                         botdev + " **MinecraftClient** - v" + mcversion + "\n\n" +
 
                         "RAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB\n" +
-                        "Uptime: " + await getUptime() + "\n\n" +
+                        "Uptime: " + getUptime() + "\n\n" +
 
                         "Clients: " + connectedClient + "/20\n" +
                         "Guilds: " + dsclient.guilds.cache.size + "\n\n" +
 
                         "Developer: brokiem#7919\n" +
                         "Language: JavaScript\n" +
-                        "Library: discord.js v12"
-                    )
+                        "Library: discord.js v13-dev"
+                    )]
                 });
                 break;
             case "servers":
                 if (message.author.id === "548120702373593090") {
-                    await channel.send("Servers: (" + dsclient.guilds.cache.size + ")\n - " + dsclient.guilds.cache.array().join("\n - "));
+                    channel.send("Servers: (" + dsclient.guilds.cache.size + ")\n - " + dsclient.guilds.cache.array().join("\n - "));
                 }
                 break;
         }
     } catch (e) {
-        await message.channel.send(x + " **An error occurred:** " + e.toString());
+        message.channel.send(x + " **An error occurred:** " + e.toString());
 
         console.log("Error: " + e);
     }
 })
 
-async function ping(channel, address, port = "19132") {
+function ping(channel, address, port = "19132") {
     if (parseInt(port) === 25565) {
-        await pingJava(channel, address, 25565)
+        pingJava(channel, address, 25565)
         return;
     }
 
     query.statusBedrock(address, {
         port: parseInt(port), enableSRV: true, timeout: 3000
     }).then((response) => {
-        channel.send(makeEmbed("**Query information**\n\n**MOTD**: " + response.motdLine1.descriptionText + "\n**Version**: " + response.version + "\n**Players**: " + response.onlinePlayers + "/" + response.maxPlayers));
+        channel.send({embeds: [makeEmbed("**Query information**\n\n**MOTD**: " + response.motdLine1.descriptionText + "\n**Version**: " + response.version + "\n**Players**: " + response.onlinePlayers + "/" + response.maxPlayers)]});
     }).catch(() => {
         if (parseInt(port) === 19132) {
             pingJava(channel, address, 25565);
@@ -261,13 +257,13 @@ async function ping(channel, address, port = "19132") {
     })
 }
 
-async function pingJava(channel, address, port) {
+function pingJava(channel, address, port) {
     query.status(address, {
         port: parseInt(port), enableSRV: true, timeout: 5000
     }).then((response) => {
-        channel.send(makeEmbed("**Query information**\n\n**MOTD**: " + response.description.descriptionText + "\n**Version**: " + response.version + "\n**Players**: " + response.onlinePlayers + "/" + response.maxPlayers));
+        channel.send({embeds: [makeEmbed("**Query information**\n\n**MOTD**: " + response.description.descriptionText + "\n**Version**: " + response.version + "\n**Players**: " + response.onlinePlayers + "/" + response.maxPlayers)]});
     }).catch((err) => {
-        channel.send(makeEmbed("Query failed: " + err));
+        channel.send({embeds: [makeEmbed("Query failed: " + err)]});
     })
 }
 
@@ -390,15 +386,15 @@ function connect(channel, address, port, version = "auto") {
                     buttons.push("ID: " + buttonId + " | Button: " + fn.text + "");
 
                     buttonId++;
-                })
+                });
 
-                channel.send(makeEmbed(text + "```" + buttons.join("\n") + "```" + "\nType ( *form <button id> ) to response"));
+                channel.send({embeds: [makeEmbed(text + "```" + buttons.join("\n") + "```" + "\nType ( *form <button id> ) to response")]});
             } else {
                 channel.send(x + " I can't handle custom form yet, you can use ' *form null ' to close the form");
             }
 
             if (debug) {
-                console.log(packet)
+                console.log(packet);
             }
         });
 
@@ -417,7 +413,7 @@ function connect(channel, address, port, version = "auto") {
         });
 
         client.on("transfer", (packet) => {
-            channel.send(makeEmbed(e + "  **TransferPacket received**\n\nAddress: " + packet.server_address + "\nPort: " + packet.port))
+            channel.send({embeds: [makeEmbed(e + "  **TransferPacket received**\n\nAddress: " + packet.server_address + "\nPort: " + packet.port)]})
             disconnect(channel, false);
             connect(channel, packet.server_address, packet.port);
         });
@@ -468,12 +464,12 @@ function connect(channel, address, port, version = "auto") {
 
 function checkMaxClient(channel) {
     if (connectedClient >= 20) {
-        channel.send(makeEmbed("Clients are too busy! Please try again later."));
+        channel.send({embeds: [makeEmbed("Clients are too busy! Please try again later.")]});
         return true;
     }
 
     if (clients[channel.guild] !== undefined && clients[channel.guild] >= 2) {
-        channel.send(makeEmbed(`Oof, this Guild has reached the limit of connected clients (${clients[channel.guild]})!`));
+        channel.send({embeds: [makeEmbed(`Oof, this Guild has reached the limit of connected clients (${clients[channel.guild]})!`)]});
         return true;
     }
 
@@ -482,7 +478,7 @@ function checkMaxClient(channel) {
 
 function sendCachedTextPacket(channel) {
     if (isConnected(channel, false) && (clients[channel]["cachedFilteredTextPacket"].length > 0) && (clients[channel] !== undefined) && clients[channel]["enableChat"]) {
-        channel.send(makeEmbed(clients[channel]["cachedFilteredTextPacket"].join("\n\n")))
+        channel.send({embeds: [makeEmbed(clients[channel]["cachedFilteredTextPacket"].join("\n\n"))]})
         clients[channel]["cachedFilteredTextPacket"] = [];
     }
 }
@@ -491,14 +487,14 @@ function makeEmbed(string) {
     return new discord.MessageEmbed().setDescription(string);
 }
 
-async function sendModalResponse(channel, string) {
+function sendModalResponse(channel, string) {
     clients[channel]["client"].queue("modal_form_response", {
         form_id: clients[channel]["formId"],
         data: string
     });
 }
 
-async function hotbar(channel, slot) {
+function hotbar(channel, slot) {
     clients[channel]["client"].queue("mob_equipment", {
         runtime_entity_id: clients[channel]["runtime_entity_id"],
         item: {
@@ -517,7 +513,7 @@ async function hotbar(channel, slot) {
     clients[channel]["hotbar_slot"] = parseInt(slot)
 }
 
-async function interact(channel) {
+function interact(channel) {
     clients[channel]["client"].queue("inventory_transaction", {
         legacy: {legacy_request_id: 0, legacy_transactions: 0},
         transaction_type: '2',
@@ -557,7 +553,7 @@ async function interact(channel) {
     });
 }
 
-async function move(channel) {
+function move(channel) {
     if (clients[channel]["player_position"] === undefined) {
         channel.send(x + " Please wait for the server to send the client position")
         return;
@@ -568,7 +564,7 @@ async function move(channel) {
         return;
     }
 
-    await channel.send(reply + " Walking...");
+    channel.send(reply + " Walking...");
 
     clients[channel]["walking"] = true;
 
@@ -599,14 +595,14 @@ async function move(channel) {
         })
     }, 50);
 
-    channel.send(makeEmbed(":ski: Walking randomly to X:" + clients[channel]["player_position"].x + " Y:" + clients[channel]["player_position"].y + " Z:" + clients[channel]["player_position"].z))
+    channel.send({embeds: [makeEmbed(":ski: Walking randomly to X:" + clients[channel]["player_position"].x + " Y:" + clients[channel]["player_position"].y + " Z:" + clients[channel]["player_position"].z)]})
 }
 
 function rand(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-async function chat(channel, string) {
+function chat(channel, string) {
     clients[channel]["client"].queue("text", {
         type: 'chat',
         needs_translation: false,
@@ -618,7 +614,7 @@ async function chat(channel, string) {
     });
 }
 
-async function sendCommand(channel, string) {
+function sendCommand(channel, string) {
     clients[channel]["client"].queue("command_request", {
         command: string,
         origin: {
@@ -667,7 +663,7 @@ function disconnect(channel, showMessage = true) {
     }
 }
 
-async function getUptime() {
+function getUptime() {
     let totalSeconds = (dsclient.uptime / 1000);
     let days = Math.floor(totalSeconds / 86400);
     let hours = Math.floor(totalSeconds / 3600);
