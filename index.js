@@ -90,6 +90,7 @@ dsclient.on("message", message => {
                 break;
             case "help":
                 const helpEmbed1 = new discord.MessageEmbed()
+                    .setColor("BLURPLE")
                     .setTitle(slash + " Command List\n\n")
                     .setThumbnail("https://cdn.discordapp.com/attachments/833621011097845830/856845502104076289/856511320421302273.png")
                     .addField("*query <address> <port>", "Query a Minecraft server (java or bedrock)")
@@ -204,7 +205,6 @@ dsclient.on("message", message => {
             case "status":
                 const invite = new discord.MessageButton().setStyle("LINK").setLabel("Invite")
                     .setURL("https://discord.com/oauth2/authorize?client_id=" + dsclient.user.id + "&permissions=3072&scope=bot");
-
                 const vote = new discord.MessageButton().setStyle("LINK").setLabel("Vote")
                     .setURL("https://top.gg/bot/844733770581803018/vote");
 
@@ -224,7 +224,7 @@ dsclient.on("message", message => {
                         "Developer: brokiem#7919\n" +
                         "Language: JavaScript\n" +
                         "Library: discord.js v13-dev"
-                    )]
+                    ).setColor("BLURPLE")]
                 });
                 break;
             case "servers":
