@@ -11,6 +11,7 @@ let clients = []
 let connectedClient = 0
 let debug = false
 
+const prefix = "*"
 const mcversion = '1.1.0'
 
 const x = "<:brokiem_x:849486576727097384>"
@@ -70,9 +71,9 @@ dsclient.on("message", async message => {
             return
         }
 
-        if (message.author.bot || !message.content.startsWith("*") || message.channel.type !== "text") return
+        if (message.author.bot || !message.content.startsWith(prefix) || message.channel.type !== "text") return
 
-        const args = message.content.slice(1).trim().split(/ +/)
+        const args = message.content.slice(prefix.length).trim().split(/ +/)
         const command = args.shift().toLowerCase()
         const channel = message.channel
 
@@ -91,7 +92,7 @@ dsclient.on("message", async message => {
                     .addField("*query <address> <port>", "Query a Minecraft server (java or bedrock)")
                     .addField("*join <address> <port> <version>", "Join to Minecraft server (bedrock)")
                     .addField("*chat <message>", "Send chat to connected server")
-                    .addField("*enablechat <value>", "Enable server chat to discord channel")
+                    .addField("*enablechat", "Enable server chat to discord channel")
                     .addField("*form <button id>", "Send form resp to connected server")
                     .addField("*disconnect", "Disconnect from connected server")
                     .addField("*invite", "Get bot invite link")
