@@ -492,65 +492,6 @@ function sendModalResponse(channel, string) {
     });
 }
 
-function hotbar(channel, slot) {
-    clients[channel]["client"].queue("mob_equipment", {
-        runtime_entity_id: clients[channel]["runtime_entity_id"],
-        item: {
-            network_id: 0,
-            count: undefined,
-            metadata: undefined,
-            has_stack_id: undefined,
-            stack_id: undefined,
-            block_runtime_id: undefined,
-            extra: {has_nbt: 0, nbt: undefined, can_place_on: [], can_destroy: []}
-        },
-        slot: parseInt(slot),
-        selected_slot: parseInt(slot),
-        window_id: 'inventory'
-    });
-    clients[channel]["hotbar_slot"] = parseInt(slot)
-}
-
-function interact(channel) {
-    clients[channel]["client"].queue("inventory_transaction", {
-        legacy: {legacy_request_id: 0, legacy_transactions: 0},
-        transaction_type: '2',
-        actions: {
-            value: 'world_interaction',
-            slot: clients[channel]["hotbar_slot"],
-            old_item: {
-                network_id: 0,
-                count: undefined,
-                metadata: undefined,
-                has_stack_id: undefined,
-                stack_id: undefined,
-                block_runtime_id: undefined,
-                extra: {has_nbt: 0, nbt: undefined, can_place_on: [], can_destroy: []}
-            },
-            new_item: {
-                network_id: 0,
-                count: undefined,
-                metadata: undefined,
-                has_stack_id: undefined,
-                stack_id: undefined,
-                block_runtime_id: undefined,
-                extra: { has_nbt: 0, nbt: undefined, can_place_on: [], can_destroy: [] }
-            }
-        },
-        transaction_data: 'item_use',
-        transaction: {
-            transaction_type: 'item_use',
-            block_position: clients[channel]["player_position"],
-            face: 0,
-            hotbar_slot: clients[channel]["hotbar_slot"],
-            held_item: 0,
-            player_pos: clients[channel]["player_position"],
-            click_pos: clients[channel]["player_position"],
-            block_runtime_id: 0
-        }
-    });
-}
-
 function move(channel) {
     if (clients[channel]["player_position"] === undefined) {
         channel.send(x + " Please wait for the server to send the client position")
