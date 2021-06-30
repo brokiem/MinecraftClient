@@ -6,8 +6,6 @@ const discord = require("discord.js");
 const dsclient = new discord.Client({intents: [discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_MESSAGES]});
 const {Client} = require("bedrock-protocol");
 const query = require("minecraft-server-util");
-const Filter = require('bad-words');
-const filter = new Filter();
 
 let clients = [];
 let connectedClient = 0;
@@ -546,7 +544,7 @@ function chat(channel, string) {
         type: 'chat',
         needs_translation: false,
         source_name: "MClient890",
-        message: filter.clean(string),
+        message: string,
         paramaters: undefined,
         xuid: '',
         platform_chat_id: ''

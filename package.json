@@ -5,8 +5,7 @@
     "bedrock-protocol": "^3.4.0",
     "discord.js": "dev",
     "dotenv": "^10.0.0",
-    "minecraft-server-util": "3.4.4",
-    "bad-words": "latest"
+    "minecraft-server-util": "3.4.4"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
