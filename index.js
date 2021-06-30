@@ -53,7 +53,6 @@ dsclient.on("ready", () => {
     console.log("Bot ready and online!\n")
 
     console.log("RAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB")
-    // console.log("Servers: (" + dsclient.guilds.cache.size + ")\n - " + dsclient.guilds.cache.array().join("\n - "))
 })
 
 dsclient.on("message", async message => {
@@ -76,8 +75,6 @@ dsclient.on("message", async message => {
         const args = message.content.slice(1).trim().split(/ +/)
         const command = args.shift().toLowerCase()
         const channel = message.channel
-
-        //console.log("Command '" + command + "' by " + message.author.tag + " on " + message.guild.name + " | " + new Date().toLocaleString())
 
         switch (command) {
             case "debug":
@@ -140,22 +137,6 @@ dsclient.on("message", async message => {
                     await channel.send(x + " I haven't connected to any server yet!")
                 }
                 break
-            /*case "hotbar":
-            case "slot":
-                if (isConnected(channel)) {
-                    if (args.length > 0) {
-                        hotbar(channel, args.join(" "))
-                        channel.send(reply + " Set hotbar to slot " + args.join(" "))
-                    } else {
-                        channel.send(x + " Please enter the slot number!")
-                    }
-                } else {
-                    channel.send(x + " I haven't connected to any server yet!")
-                }
-                break
-            case "interact":
-                interact(channel)
-                break*/
             case "move":
             case "walk":
                 if (isConnected(channel)) {
@@ -595,11 +576,10 @@ function disconnect(channel, showMessage = true) {
 
 function getUptime() {
     let totalSeconds = (dsclient.uptime / 1000)
-    let days = Math.floor(totalSeconds / 86400)
     let hours = Math.floor(totalSeconds / 3600)
     totalSeconds %= 3600
     let minutes = Math.floor(totalSeconds / 60)
     let seconds = totalSeconds % 60
 
-    return /*((0 < days) ? (days + " day, ") : "") + */hours + "h, " + minutes + "m and " + seconds.toFixed(0) + "s"
+    return hours + "h, " + minutes + "m and " + seconds.toFixed(0) + "s"
 }
