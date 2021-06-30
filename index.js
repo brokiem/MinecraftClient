@@ -58,12 +58,12 @@ dsclient.on("ready", () => {
     // console.log("Servers: (" + dsclient.guilds.cache.size + ")\n - " + dsclient.guilds.cache.array().join("\n - "))
 });
 
-dsclient.on("message", message => {
-    try {
-        if (!message.guild.me.permissions.has("SEND_MESSAGES")) {
-            return;
-        }
+dsclient.on("message", async message => {
+    if (!message.guild.me.permissions.has("SEND_MESSAGES")) {
+        return;
+    }
 
+    try {
         if (message.content.includes(dsclient.user.id) && message.channel.type === "text" && !message.author.bot) {
             message.channel.send({embeds: [makeEmbed(slash + " My prefix is * (Asterisk) | *help")]}).then(msg => {
                 setTimeout(function () {
@@ -85,7 +85,7 @@ dsclient.on("message", message => {
             case "debug":
                 if (message.author.id === "548120702373593090") {
                     debug = !debug;
-                    channel.send("Debug successfully " + (debug ? "enabled" : "disabled"));
+                    await channel.send("Debug successfully " + (debug ? "enabled" : "disabled"));
                 }
                 break;
             case "help":
@@ -101,27 +101,27 @@ dsclient.on("message", message => {
                     .addField("*disconnect", "Disconnect from connected server")
                     .addField("*invite", "Get bot invite link");
 
-                channel.send({embeds: [helpEmbed1]});
+                await channel.send({embeds: [helpEmbed1]});
                 break;
             case "query":
                 if (args.length > 0) {
-                    channel.send(signal + " Getting query info...");
-                    ping(channel, args[0], isNaN(args[1]) ? 19132 : args[1]);
+                    await channel.send(signal + " Getting query info...");
+                    await ping(channel, args[0], isNaN(args[1]) ? 19132 : args[1]);
                 } else {
-                    channel.send({embeds: [makeEmbed(slash + " **Usage:** *query <address> <port>")]});
+                    await channel.send({embeds: [makeEmbed(slash + " **Usage:** *query <address> <port>")]});
                 }
                 break;
             case "connect":
             case "join":
                 if (args.length > 0) {
                     if (args[2] !== undefined && !sup_versions.includes(args[2])) {
-                        channel.send({embeds: [makeEmbed(settings + " Supported versions: " + sup_versions.join(", "))]});
+                        await channel.send({embeds: [makeEmbed(settings + " Supported versions: " + sup_versions.join(", "))]});
                         return;
                     }
 
                     connect(channel, args[0], isNaN(args[1]) ? 19132 : args[1], args[2] ?? "auto");
                 } else {
-                    channel.send({embeds: [makeEmbed(slash + " **Usage:** *connect <address> <port> <version>")]});
+                    await channel.send({embeds: [makeEmbed(slash + " **Usage:** *connect <address> <port> <version>")]});
                 }
                 break;
             case "chat":
@@ -130,16 +130,16 @@ dsclient.on("message", message => {
                     if (args.length > 0) {
                         if (args.join(" ").charAt(0) === "/") {
                             sendCommand(channel, args.join(" "));
-                            channel.send(reply + " Sending command...");
+                            await channel.send(reply + " Sending command...");
                         } else {
                             chat(channel, args.join(" "));
-                            channel.send(reply + " Sending message...");
+                            await channel.send(reply + " Sending message...");
                         }
                     } else {
-                        channel.send({embeds: [makeEmbed(slash + " **Usage:** *chat <message>")]});
+                        await channel.send({embeds: [makeEmbed(slash + " **Usage:** *chat <message>")]});
                     }
                 } else {
-                    channel.send(x + " I haven't connected to any server yet!");
+                    await channel.send(x + " I haven't connected to any server yet!");
                 }
                 break;
             /*case "hotbar":
@@ -163,22 +163,22 @@ dsclient.on("message", message => {
                 if (isConnected(channel)) {
                     move(channel);
                 } else {
-                    channel.send(x + " I haven't connected to any server yet!");
+                    await channel.send(x + " I haven't connected to any server yet!");
                 }
                 break;
             case "form":
                 if (isConnected(channel)) {
                     if (clients[channel]["formId"] !== undefined) {
                         if (args.length > 0) {
-                            channel.send(reply + " Sending modal form response");
+                            await channel.send(reply + " Sending modal form response");
                             sendModalResponse(channel, args.join(" "));
                             clients[channel]["formId"] = undefined;
                         }
                     } else {
-                        channel.send(x + " No ModalFormRequestPacket found!");
+                        await channel.send(x + " No ModalFormRequestPacket found!");
                     }
                 } else {
-                    channel.send(x + " I haven't connected to any server yet!");
+                    await channel.send(x + " I haven't connected to any server yet!");
                 }
                 break;
             case "enablechat":
@@ -186,14 +186,14 @@ dsclient.on("message", message => {
                     if (args.length > 0) {
                         if (args[0] === "true") {
                             clients[channel]["enableChat"] = true;
-                            channel.send(":ballot_box_with_check: Chat successfully enabled");
+                            await channel.send(":ballot_box_with_check: Chat successfully enabled");
                         } else if (args[0] === "false") {
                             clients[channel]["enableChat"] = false;
-                            channel.send(":ballot_box_with_check: Chat successfully disabled");
+                            await channel.send(":ballot_box_with_check: Chat successfully disabled");
                         }
                     }
                 } else {
-                    channel.send(x + " I haven't connected to any server yet!");
+                    await channel.send(x + " I haven't connected to any server yet!");
                 }
                 break;
             case "close":
@@ -210,7 +210,7 @@ dsclient.on("message", message => {
 
                 const row = new discord.MessageActionRow().addComponents(invite).addComponents(vote);
 
-                channel.send({
+                await channel.send({
                     components: [row],
                     embeds: [makeEmbed("" +
                         botdev + " **MinecraftClient** - v" + mcversion + "\n\n" +
@@ -229,20 +229,20 @@ dsclient.on("message", message => {
                 break;
             case "servers":
                 if (message.author.id === "548120702373593090") {
-                    channel.send("Servers: (" + dsclient.guilds.cache.size + ")\n - " + dsclient.guilds.cache.array().join("\n - "));
+                    await channel.send("Servers: (" + dsclient.guilds.cache.size + ")\n - " + dsclient.guilds.cache.array().join("\n - "));
                 }
                 break;
         }
     } catch (e) {
-        message.channel.send(x + " **An error occurred:** " + e.toString());
+        await message.channel.send(x + " **An error occurred:** " + e.toString());
 
         console.log("Error: " + e);
     }
 })
 
-function ping(channel, address, port = "19132") {
+async function ping(channel, address, port = "19132") {
     if (parseInt(port) === 25565) {
-        pingJava(channel, address, 25565);
+        await pingJava(channel, address, 25565);
         return;
     }
 
@@ -257,7 +257,7 @@ function ping(channel, address, port = "19132") {
     })
 }
 
-function pingJava(channel, address, port) {
+async function pingJava(channel, address, port) {
     query.status(address, {
         port: parseInt(port), enableSRV: true, timeout: 5000
     }).then((response) => {
