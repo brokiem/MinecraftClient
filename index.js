@@ -81,7 +81,7 @@ dsclient.on("message", async message => {
             case "debug":
                 if (message.author.id === "548120702373593090") {
                     debug = !debug
-                    await channel.send("Debug successfully " + (debug ? "enabled" : "disabled"))
+                    await message.reply("Debug successfully " + (debug ? "enabled" : "disabled"))
                 }
                 break
             case "help":
@@ -97,27 +97,36 @@ dsclient.on("message", async message => {
                     .addField("*disconnect", "Disconnect from connected server")
                     .addField("*invite", "Get bot invite link")
 
-                await channel.send({embeds: [helpEmbed1]})
+                await message.reply({embeds: [helpEmbed1], allowedMentions: {parse: [], repliedUser: false}})
                 break
             case "query":
                 if (args.length > 0) {
                     await channel.send(signal + " Getting query info...")
                     await ping(channel, args[0], isNaN(args[1]) ? 19132 : args[1])
                 } else {
-                    await channel.send({embeds: [makeEmbed(slash + " **Usage:** *query <address> <port>")]})
+                    await message.reply({
+                        embeds: [makeEmbed(slash + " **Usage:** *query <address> <port>")],
+                        allowedMentions: {parse: [], repliedUser: false}
+                    })
                 }
                 break
             case "connect":
             case "join":
                 if (args.length > 0) {
                     if (args[2] !== undefined && !sup_versions.includes(args[2])) {
-                        await channel.send({embeds: [makeEmbed(settings + " Supported versions: " + sup_versions.join(", "))]})
+                        await message.reply({
+                            embeds: [makeEmbed(settings + " Supported versions: " + sup_versions.join(", "))],
+                            allowedMentions: {parse: [], repliedUser: false}
+                        })
                         return
                     }
 
-                    connect(channel, args[0], isNaN(args[1]) ? 19132 : args[1], args[2] ?? "auto")
+                    connect(message, args[0], isNaN(args[1]) ? 19132 : args[1], args[2] ?? "auto")
                 } else {
-                    await channel.send({embeds: [makeEmbed(slash + " **Usage:** *connect <address> <port> <version>")]})
+                    await message.reply({
+                        embeds: [makeEmbed(slash + " **Usage:** *connect <address> <port> <version>")],
+                        allowedMentions: {parse: [], repliedUser: false}
+                    })
                 }
                 break
             case "chat":
@@ -132,10 +141,16 @@ dsclient.on("message", async message => {
                             await channel.send(reply + " Sending message...")
                         }
                     } else {
-                        await channel.send({embeds: [makeEmbed(slash + " **Usage:** *chat <message>")]})
+                        await message.reply({
+                            embeds: [makeEmbed(slash + " **Usage:** *chat <message>")],
+                            allowedMentions: {parse: [], repliedUser: false}
+                        })
                     }
                 } else {
-                    await channel.send(x + " I haven't connected to any server yet!")
+                    await message.reply({
+                        content: x + " I haven't connected to any server yet!",
+                        allowedMentions: {parse: [], repliedUser: false}
+                    })
                 }
                 break
             case "move":
@@ -143,7 +158,10 @@ dsclient.on("message", async message => {
                 if (isConnected(channel)) {
                     move(channel)
                 } else {
-                    await channel.send(x + " I haven't connected to any server yet!")
+                    await message.reply({
+                        content: x + " I haven't connected to any server yet!",
+                        allowedMentions: {parse: [], repliedUser: false}
+                    })
                 }
                 break
             case "form":
@@ -155,10 +173,16 @@ dsclient.on("message", async message => {
                             clients[channel]["formId"] = undefined
                         }
                     } else {
-                        await channel.send(x + " No ModalFormRequestPacket found!")
+                        await message.reply({
+                            content: x + " No ModalFormRequestPacket found!",
+                            allowedMentions: {parse: [], repliedUser: false}
+                        })
                     }
                 } else {
-                    await channel.send(x + " I haven't connected to any server yet!")
+                    await message.reply({
+                        content: x + " I haven't connected to any server yet!",
+                        allowedMentions: {parse: [], repliedUser: false}
+                    })
                 }
                 break
             case "enablechat":
@@ -166,16 +190,20 @@ dsclient.on("message", async message => {
                     clients[channel]["enableChat"] = !clients[channel]["enableChat"]
                     await channel.send(":ballot_box_with_check: Chat from server successfully " + (debug ? "enabled" : "disabled"))
                 } else {
-                    await channel.send(x + " I haven't connected to any server yet!")
+                    await message.reply({
+                        content: x + " I haven't connected to any server yet!",
+                        allowedMentions: {parse: [], repliedUser: false}
+                    })
                 }
                 break
             case "close":
             case "disconnect":
-                disconnect(channel)
+                disconnect(message)
                 break
             case "invite":
             case "stats":
             case "status":
+            case "uptime":
                 const invite = new discord.MessageButton().setStyle("LINK").setLabel("Invite")
                     .setURL("https://discord.com/oauth2/authorize?client_id=" + dsclient.user.id + "&permissions=3072&scope=bot")
                 const vote = new discord.MessageButton().setStyle("LINK").setLabel("Vote")
@@ -183,7 +211,7 @@ dsclient.on("message", async message => {
 
                 const row = new discord.MessageActionRow().addComponents(invite).addComponents(vote)
 
-                await channel.send({
+                await message.reply({
                     components: [row],
                     embeds: [makeEmbed("" +
                         botdev + " **MinecraftClient** - v" + mcversion + "\n\n" +
@@ -196,8 +224,9 @@ dsclient.on("message", async message => {
 
                         "Developer: brokiem#7919\n" +
                         "Language: JavaScript\n" +
-                        "Library: discord.js v13-dev"
-                    ).setColor("BLURPLE")]
+                        "Library: discord.js v13\n"
+                    ).setColor("BLURPLE")],
+                    allowedMentions: {parse: [], repliedUser: false}
                 })
                 break
             case "servers":
@@ -207,7 +236,10 @@ dsclient.on("message", async message => {
                 break
         }
     } catch (e) {
-        await message.channel.send(x + " **An error occurred:** " + e.toString())
+        await message.reply({
+            content: x + " **An error occurred:** " + e.toString(),
+            allowedMentions: {parse: [], repliedUser: false}
+        })
 
         console.log("Error: " + e)
     }
@@ -240,13 +272,18 @@ async function pingJava(channel, address, port) {
     })
 }
 
-function connect(channel, address, port, version = "auto") {
+function connect(message, address, port, version = "auto") {
+    const channel = message.channel
+
     if (isConnected(channel, false)) {
-        channel.send(x + " I've connected on this channel!")
+        message.reply({
+            content: x + " I've connected on this channel!",
+            allowedMentions: {parse: [], repliedUser: false}
+        })
         return
     }
 
-    if (checkMaxClient(channel)) {
+    if (checkMaxClient(message)) {
         return
     }
 
@@ -287,7 +324,7 @@ function connect(channel, address, port, version = "auto") {
         clients[channel]["connectTimeout"] = setTimeout(function () {
             if (!clients[channel]["connected"]) {
                 channel.send(x + " Server didn't respond in 10 seconds. Something wrong happened\n" + e + " Maybe this problem happened because: Incompatible version/protocol, packet processing error or connection problem")
-                disconnect(channel, false)
+                disconnect(message, false)
             }
         }, 10000)
 
@@ -297,7 +334,7 @@ function connect(channel, address, port, version = "auto") {
         clients[channel]["maxTimeConnectedTimeout"] = setTimeout(function () {
             if (isConnected(channel, false)) {
                 channel.send(x + " Disconnected because automatically disconnected every 20 minutes")
-                disconnect(channel, false)
+                disconnect(message, false)
             }
         }, 1200000)
 
@@ -310,8 +347,9 @@ function connect(channel, address, port, version = "auto") {
             clients[channel]["player_position"] = packet.spawn_position
             clients[channel]["player_position"].y += 1.62
 
-            channel.send(":signal_strength: Successfully connected to the server!~")
             clients[channel]["connected"] = true
+
+            channel.send(":signal_strength: Successfully connected to the server!~")
             client.queue("set_local_player_as_initialized", {runtime_entity_id: clients[channel]["runtime_entity_id"]})
 
             if (clients[channel]["connectTimeout"] !== undefined) {
@@ -333,7 +371,7 @@ function connect(channel, address, port, version = "auto") {
 
             if (message !== null) {
                 channel.send("Disconnected from the server: " + message)
-                disconnect(channel, false)
+                disconnect(message, false)
             }
         })
 
@@ -385,8 +423,8 @@ function connect(channel, address, port, version = "auto") {
 
         client.on("transfer", (packet) => {
             channel.send({embeds: [makeEmbed(e + "  **TransferPacket received**\n\nAddress: " + packet.server_address + "\nPort: " + packet.port)]})
-            disconnect(channel, false)
-            connect(channel, packet.server_address, packet.port)
+            disconnect(message, false)
+            connect(message, packet.server_address, packet.port)
         })
 
         client.once("resource_packs_info", () => {
@@ -403,7 +441,7 @@ function connect(channel, address, port, version = "auto") {
             })
 
             client.queue("client_cache_status", {enabled: false})
-            client.queue("request_chunk_radius", {chunk_radius: 1})
+            client.queue("request_chunk_radius", {chunk_radius: 2})
             client.queue("tick_sync", {request_time: BigInt(Date.now()), response_time: 0n})
         })
 
@@ -413,7 +451,7 @@ function connect(channel, address, port, version = "auto") {
 
         client.once("close", () => {
             if (isConnected(channel)) {
-                disconnect(channel, false)
+                disconnect(message, false)
             }
 
             channel.send(x + " Disconnected: Client closed!")
@@ -433,14 +471,22 @@ function connect(channel, address, port, version = "auto") {
     })
 }
 
-function checkMaxClient(channel) {
+function checkMaxClient(message) {
+    const channel = message.channel
+
     if (connectedClient >= 20) {
-        channel.send({embeds: [makeEmbed("All Clients are busy! Please try again later.")]})
+        message.reply({
+            embeds: [makeEmbed("All Clients are busy! Please try again later.")],
+            allowedMentions: {parse: [], repliedUser: false}
+        })
         return true
     }
 
     if (clients[channel.guild] !== undefined && clients[channel.guild] >= 2) {
-        channel.send({embeds: [makeEmbed(`Oof, this Guild has reached the limit of connected clients (${clients[channel.guild]})!`)]})
+        message.reply({
+            embeds: [makeEmbed(`Oof, this Guild has reached the limit of connected clients (${clients[channel.guild]})!`)],
+            allowedMentions: {parse: [], repliedUser: false}
+        })
         return true
     }
 
@@ -545,9 +591,14 @@ function isConnected(channel, checkConnected = true) {
     return clients[channel] !== undefined
 }
 
-function disconnect(channel, showMessage = true) {
+function disconnect(message, showMessage = true) {
+    const channel = message.channel
+
     if (!isConnected(channel, false)) {
-        channel.send(x + " I haven't connected to any server yet!\n")
+        message.reply({
+            content: x + " I haven't connected to any server yet!\n",
+            allowedMentions: {parse: [], repliedUser: false}
+        })
         return
     }
 
