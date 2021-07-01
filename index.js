@@ -232,7 +232,7 @@ dsclient.on("message", async message => {
                 const latency = dsclient.ws.ping;
                 const embed = makeEmbed(signal + " Discord API Latency: " + latency + "ms");
 
-                if (latency >= 0 && latency <= 74) {
+                if (latency <= 74) {
                     embed.setColor("GREEN")
                 } else if (latency >= 75 && latency <= 150) {
                     embed.setColor("YELLOW")
