@@ -227,6 +227,24 @@ dsclient.on("message", async message => {
                     allowedMentions: {parse: [], repliedUser: false}
                 })
                 break
+            case "ping":
+            case "latency":
+                const latency = dsclient.ws.ping;
+                const embed = makeEmbed(signal + " Discord API Latency: " + latency + "ms");
+
+                if (latency >= 0 && latency <= 74) {
+                    embed.setColor("GREEN")
+                } else if (latency >= 75 && latency <= 150) {
+                    embed.setColor("YELLOW")
+                } else {
+                    embed.setColor("RED")
+                }
+
+                await message.reply({
+                    embeds: [embed],
+                    allowedMentions: {parse: [], repliedUser: false}
+                })
+                break
             case "servers":
                 if (message.author.id === "548120702373593090") {
                     await channel.send("Servers: (" + dsclient.guilds.cache.size + ")\n - " + dsclient.guilds.cache.array().join("\n - "))
