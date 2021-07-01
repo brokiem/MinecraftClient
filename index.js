@@ -1,4 +1,4 @@
-//process.env.DEBUG = 'minecraft-protocol'
+//process.env.DEBUG = "minecraft-protocol"
 
 const discord = require("discord.js")
 const dsclient = new discord.Client({intents: [discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_MESSAGES]})
@@ -10,7 +10,7 @@ let connectedClient = 0
 let debug = false
 
 const prefix = "*"
-const mcversion = '1.1.0'
+const mcversion = "1.1.0"
 
 const x = "<:brokiem_x:849486576727097384>"
 const e = "<:enter:849493018910261259>"
@@ -293,7 +293,7 @@ function connect(message, address, port, version = "auto") {
     } else {
         clients[channel.guild] = 1
     }
-    clients[channel] = {'connected': false, 'enableChat': true, 'hotbar_slot': 0, 'cachedFilteredTextPacket': []}
+    clients[channel] = {"connected": false, "enableChat": true, "hotbar_slot": 0, "cachedFilteredTextPacket": []}
 
     query.statusBedrock(address, {
         port: parseInt(port), enableSRV: true, timeout: 5000
@@ -302,7 +302,7 @@ function connect(message, address, port, version = "auto") {
             host: address,
             port: parseInt(port),
             offline: false,
-            authTitle: '00000000441cc96b',
+            authTitle: "00000000441cc96b",
             skipPing: true
         })
 
@@ -312,7 +312,7 @@ function connect(message, address, port, version = "auto") {
                 port: parseInt(port),
                 version: version,
                 offline: false,
-                authTitle: '00000000441cc96b',
+                authTitle: "00000000441cc96b",
                 skipPing: true
             })
         }
@@ -397,7 +397,7 @@ function connect(message, address, port, version = "auto") {
 
                 channel.send({embeds: [makeEmbed(text + "```" + buttons.join("\n") + "```" + "\nType ( *form <button id> ) to response")]})
             } else {
-                channel.send(x + " I can't handle custom form yet, Use ' *form null ' to close the form")
+                channel.send(x + ` I can't handle custom form yet, Use " *form null " to close the form`)
             }
 
             if (debug) {
@@ -427,13 +427,13 @@ function connect(message, address, port, version = "auto") {
 
         client.once("resource_packs_info", () => {
             client.write("resource_pack_client_response", {
-                response_status: 'completed',
+                response_status: "completed",
                 resourcepackids: []
             })
 
             client.once("resource_pack_stack", () => {
                 client.write("resource_pack_client_response", {
-                    response_status: 'completed',
+                    response_status: "completed",
                     resourcepackids: []
                 })
             })
@@ -543,7 +543,7 @@ function move(channel) {
             pitch: rand(0, 12),
             yaw: rand(0, 12),
             head_yaw: rand(0, 12),
-            mode: 'normal',
+            mode: "normal",
             on_ground: true,
             ridden_runtime_id: 0,
             teleport: {cause: "unknown", source_entity_type: 0},
@@ -560,13 +560,13 @@ function rand(min, max) {
 
 function chat(channel, string) {
     clients[channel]["client"].queue("text", {
-        type: 'chat',
+        type: "chat",
         needs_translation: false,
         source_name: "MClient890",
         message: string,
         paramaters: undefined,
-        xuid: '',
-        platform_chat_id: ''
+        xuid: "",
+        platform_chat_id: ""
     })
 }
 
