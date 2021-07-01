@@ -10,7 +10,7 @@ let connectedClient = 0
 let debug = false
 
 const prefix = "*"
-const mcversion = "1.1.0"
+const mcversion = "1.1.1"
 
 const x = "<:brokiem_x:849486576727097384>"
 const e = "<:enter:849493018910261259>"
