@@ -4,7 +4,6 @@
   "dependencies": {
     "bedrock-protocol": "^3.4.0",
     "discord.js": "dev",
-    "dotenv": "^10.0.0",
     "minecraft-server-util": "3.4.4"
   },
   "scripts": {

@@ -1,7 +1,5 @@
 //process.env.DEBUG = 'minecraft-protocol'
 
-require("dotenv").config()
-
 const discord = require("discord.js")
 const dsclient = new discord.Client({intents: [discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_MESSAGES]})
 const {Client} = require("bedrock-protocol")
