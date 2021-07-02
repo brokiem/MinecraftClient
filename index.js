@@ -95,7 +95,7 @@ dsclient.on("message", async message => {
                     .addField("*disconnect", "Disconnect from connected server")
                     .addField("*invite", "Get bot invite link")
 
-                await message.reply({embeds: [helpEmbed1], allowedMentions: {parse: [], repliedUser: false}})
+                await message.reply({embeds: [helpEmbed1], allowedMentions: {repliedUser: false}})
                 break
             case "query":
                 if (args.length > 0) {
@@ -104,7 +104,7 @@ dsclient.on("message", async message => {
                 } else {
                     await message.reply({
                         embeds: [makeEmbed(slash + " **Usage:** *query <address> <port>")],
-                        allowedMentions: {parse: [], repliedUser: false}
+                        allowedMentions: {repliedUser: false}
                     })
                 }
                 break
@@ -114,7 +114,7 @@ dsclient.on("message", async message => {
                     if (args[2] !== undefined && !sup_versions.includes(args[2])) {
                         await message.reply({
                             embeds: [makeEmbed(settings + " Supported versions: " + sup_versions.join(", "))],
-                            allowedMentions: {parse: [], repliedUser: false}
+                            allowedMentions: {repliedUser: false}
                         })
                         return
                     }
@@ -123,7 +123,7 @@ dsclient.on("message", async message => {
                 } else {
                     await message.reply({
                         embeds: [makeEmbed(slash + " **Usage:** *connect <address> <port> <version>")],
-                        allowedMentions: {parse: [], repliedUser: false}
+                        allowedMentions: {repliedUser: false}
                     })
                 }
                 break
@@ -141,13 +141,13 @@ dsclient.on("message", async message => {
                     } else {
                         await message.reply({
                             embeds: [makeEmbed(slash + " **Usage:** *chat <message>")],
-                            allowedMentions: {parse: [], repliedUser: false}
+                            allowedMentions: {repliedUser: false}
                         })
                     }
                 } else {
                     await message.reply({
                         content: x + " I haven't connected to any server yet!",
-                        allowedMentions: {parse: [], repliedUser: false}
+                        allowedMentions: {repliedUser: false}
                     })
                 }
                 break
@@ -158,7 +158,7 @@ dsclient.on("message", async message => {
                 } else {
                     await message.reply({
                         content: x + " I haven't connected to any server yet!",
-                        allowedMentions: {parse: [], repliedUser: false}
+                        allowedMentions: {repliedUser: false}
                     })
                 }
                 break
@@ -173,13 +173,13 @@ dsclient.on("message", async message => {
                     } else {
                         await message.reply({
                             content: x + " No ModalFormRequestPacket found!",
-                            allowedMentions: {parse: [], repliedUser: false}
+                            allowedMentions: {repliedUser: false}
                         })
                     }
                 } else {
                     await message.reply({
                         content: x + " I haven't connected to any server yet!",
-                        allowedMentions: {parse: [], repliedUser: false}
+                        allowedMentions: {repliedUser: false}
                     })
                 }
                 break
@@ -190,7 +190,7 @@ dsclient.on("message", async message => {
                 } else {
                     await message.reply({
                         content: x + " I haven't connected to any server yet!",
-                        allowedMentions: {parse: [], repliedUser: false}
+                        allowedMentions: {repliedUser: false}
                     })
                 }
                 break
@@ -224,7 +224,7 @@ dsclient.on("message", async message => {
                         "Language: JavaScript\n" +
                         "Library: discord.js v13\n"
                     ).setColor("BLURPLE")],
-                    allowedMentions: {parse: [], repliedUser: false}
+                    allowedMentions: {repliedUser: false}
                 })
                 break
             case "ping":
@@ -242,7 +242,7 @@ dsclient.on("message", async message => {
 
                 await message.reply({
                     embeds: [embed],
-                    allowedMentions: {parse: [], repliedUser: false}
+                    allowedMentions: {repliedUser: false}
                 })
                 break
             case "servers":
@@ -250,14 +250,47 @@ dsclient.on("message", async message => {
                     await channel.send("Servers: (" + dsclient.guilds.cache.size + ")\n - " + dsclient.guilds.cache.array().join("\n - "))
                 }
                 break
+            case "slash":
+                if (message.author.id === "548120702373593090") {
+                    await dsclient.application.commands.create({
+                        name: "help",
+                        description: "Show help command",
+                    });
+
+                    await message.reply({
+                        content: "Slash command created!",
+                        allowedMentions: {repliedUser: false}
+                    })
+                }
+                break
         }
     } catch (e) {
         await message.reply({
             content: x + " **An error occurred:** " + e.toString(),
-            allowedMentions: {parse: [], repliedUser: false}
+            allowedMentions: {repliedUser: false}
         })
 
         console.log("Error: " + e)
+    }
+})
+
+dsclient.on("interaction", async interaction => {
+    if (interaction.isCommand()) {
+        if (interaction.commandName === "help") {
+            const helpEmbed1 = new discord.MessageEmbed()
+                .setColor("BLURPLE")
+                .setTitle(slash + " Command List\n\n")
+                .setThumbnail("https://cdn.discordapp.com/attachments/833621011097845830/856845502104076289/856511320421302273.png")
+                .addField("*query <address> <port>", "Query a Minecraft server (java or bedrock)")
+                .addField("*join <address> <port> <version>", "Join to Minecraft server (bedrock)")
+                .addField("*chat <message>", "Send chat to connected server")
+                .addField("*enablechat", "Enable server chat to discord channel")
+                .addField("*form <button id>", "Send form resp to connected server")
+                .addField("*disconnect", "Disconnect from connected server")
+                .addField("*invite", "Get bot invite link")
+
+            interaction.reply({embeds: [helpEmbed1], allowedMentions: {repliedUser: false}})
+        }
     }
 })
 
@@ -294,7 +327,7 @@ function connect(message, address, port, version = "auto") {
     if (isConnected(channel, false)) {
         message.reply({
             content: x + " I've connected on this channel!",
-            allowedMentions: {parse: [], repliedUser: false}
+            allowedMentions: {repliedUser: false}
         })
         return
     }
@@ -493,7 +526,7 @@ function checkMaxClient(message) {
     if (connectedClient >= 20) {
         message.reply({
             embeds: [makeEmbed("All Clients are busy! Please try again later.")],
-            allowedMentions: {parse: [], repliedUser: false}
+            allowedMentions: {repliedUser: false}
         })
         return true
     }
@@ -501,7 +534,7 @@ function checkMaxClient(message) {
     if (clients[channel.guild] !== undefined && clients[channel.guild] >= 2) {
         message.reply({
             embeds: [makeEmbed(`Oof, this Guild has reached the limit of connected clients (${clients[channel.guild]})!`)],
-            allowedMentions: {parse: [], repliedUser: false}
+            allowedMentions: {repliedUser: false}
         })
         return true
     }
@@ -613,7 +646,7 @@ function disconnect(message, showMessage = true) {
     if (!isConnected(channel, false)) {
         message.reply({
             content: x + " I haven't connected to any server yet!\n",
-            allowedMentions: {parse: [], repliedUser: false}
+            allowedMentions: {repliedUser: false}
         })
         return
     }
