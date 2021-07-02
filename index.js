@@ -215,7 +215,7 @@ dsclient.on("message", async message => {
                     embeds: [makeEmbed("" +
                         "**❯  Minecraft Client** - v" + mcversion +
                         "\n\n" +
-                        "• CPU Usage: " + getProcessUsage() + "%\n" +
+                        "• CPU Usage: " + os.loadavg().toString().split(",")[0] + "%\n" +
                         "• RAM Usage: " + (Math.round(process.memoryUsage().rss / 10485.76) / 100) + " MB/" + (Math.round(os.totalmem() / 10485.76) / 100).toString().charAt(0) + " GB\n" +
                         "\n" +
                         "• Uptime: " + await getUptime() + "\n" +
@@ -686,31 +686,4 @@ async function getUptime() {
     let seconds = totalSeconds % 60
 
     return hours + "h, " + minutes + "m and " + seconds.toFixed(0) + "s"
-}
-
-function getProcessUsage() {
-    const startTime = process.hrtime();
-    const startUsage = process.cpuUsage();
-
-    const now = Date.now();
-    let cpuPercent;
-
-    while (Date.now() - now < 500) {
-        const elapTime = process.hrtime(startTime);
-        const elapUsage = process.cpuUsage(startUsage);
-
-        const elapTimeMS = secNSec2ms(elapTime);
-        const elapUserMS = secNSec2ms(elapUsage.user);
-        const elapSystMS = secNSec2ms(elapUsage.system);
-        cpuPercent = Math.round(100 * (elapUserMS + elapSystMS) / elapTimeMS) / os.cpus().length;
-    }
-
-    return cpuPercent;
-}
-
-function secNSec2ms(secNSec) {
-    if (Array.isArray(secNSec)) {
-        return secNSec[0] * 1000 + secNSec[1] / 1000000;
-    }
-    return secNSec / 1000;
 }
