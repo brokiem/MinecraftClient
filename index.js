@@ -4,6 +4,7 @@ const discord = require("discord.js")
 const dsclient = new discord.Client({intents: [discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_MESSAGES]})
 const {Client} = require("bedrock-protocol")
 const query = require("minecraft-server-util")
+const os = require("os");
 
 let clients = []
 let connectedClient = 0
@@ -212,17 +213,19 @@ dsclient.on("message", async message => {
                 await message.reply({
                     components: [row],
                     embeds: [makeEmbed("" +
-                        botdev + " **MinecraftClient** - v" + mcversion + "\n\n" +
-
-                        "RAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB\n" +
-                        "Uptime: " + getUptime() + "\n\n" +
-
-                        "Clients: " + connectedClient + "/20\n" +
-                        "Guilds: " + dsclient.guilds.cache.size + "\n\n" +
-
-                        "Developer: brokiem#7919\n" +
-                        "Language: JavaScript\n" +
-                        "Library: discord.js v13\n"
+                        "**❯  Minecraft Client** - v" + mcversion +
+                        "\n\n" +
+                        "• CPU Usage: " + getProcessUsage() + "%\n" +
+                        "• RAM Usage: " + (Math.round(process.memoryUsage().rss / 10485.76) / 100) + " MB/" + (Math.round(os.totalmem() / 10485.76) / 100).toString().charAt(0) + " GB\n" +
+                        "\n" +
+                        "• Uptime: " + await getUptime() + "\n" +
+                        "• Latency: " + dsclient.ws.ping + "ms\n" +
+                        "• Guilds: " + dsclient.guilds.cache.size + "\n" +
+                        "• Clients: " + connectedClient + "/20\n" +
+                        "\n" +
+                        "• Developer: [brokiem](https://github.com/brokiem)\n" +
+                        "• Library: discord.js v13\n" +
+                        "• Github: [MinecraftClient](https://github.com/brokiem/MinecraftClient)"
                     ).setColor("BLURPLE")],
                     allowedMentions: {repliedUser: false}
                 })
@@ -234,7 +237,7 @@ dsclient.on("message", async message => {
 
                 if (latency <= 74) {
                     embed.setColor("GREEN")
-                } else if (latency >= 75 && latency <= 150) {
+                } else if (latency >= 75 && latency <= 200) {
                     embed.setColor("YELLOW")
                 } else {
                     embed.setColor("RED")
@@ -675,7 +678,7 @@ function disconnect(message, showMessage = true) {
     }
 }
 
-function getUptime() {
+async function getUptime() {
     let totalSeconds = (dsclient.uptime / 1000)
     let hours = Math.floor(totalSeconds / 3600)
     totalSeconds %= 3600
@@ -683,4 +686,31 @@ function getUptime() {
     let seconds = totalSeconds % 60
 
     return hours + "h, " + minutes + "m and " + seconds.toFixed(0) + "s"
+}
+
+function getProcessUsage() {
+    const startTime = process.hrtime();
+    const startUsage = process.cpuUsage();
+
+    const now = Date.now();
+    let cpuPercent;
+
+    while (Date.now() - now < 500) {
+        const elapTime = process.hrtime(startTime);
+        const elapUsage = process.cpuUsage(startUsage);
+
+        const elapTimeMS = secNSec2ms(elapTime);
+        const elapUserMS = secNSec2ms(elapUsage.user);
+        const elapSystMS = secNSec2ms(elapUsage.system);
+        cpuPercent = Math.round(100 * (elapUserMS + elapSystMS) / elapTimeMS) / os.cpus().length;
+    }
+
+    return cpuPercent;
+}
+
+function secNSec2ms(secNSec) {
+    if (Array.isArray(secNSec)) {
+        return secNSec[0] * 1000 + secNSec[1] / 1000000;
+    }
+    return secNSec / 1000;
 }
