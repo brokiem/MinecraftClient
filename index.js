@@ -4,7 +4,7 @@ const discord = require("discord.js")
 const dsclient = new discord.Client({intents: [discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_MESSAGES]})
 const {Client} = require("bedrock-protocol")
 const query = require("minecraft-server-util")
-const os = require("os");
+const os = require("os")
 
 let clients = []
 let connectedClient = 0
@@ -232,8 +232,8 @@ dsclient.on("message", async message => {
                 break
             case "ping":
             case "latency":
-                const latency = dsclient.ws.ping;
-                const embed = makeEmbed(signal + " Discord API Latency: " + latency + "ms");
+                const latency = dsclient.ws.ping
+                const embed = makeEmbed(signal + " Discord API Latency: " + latency + "ms")
 
                 if (latency <= 74) {
                     embed.setColor("GREEN")
@@ -255,15 +255,46 @@ dsclient.on("message", async message => {
                 break
             case "slash":
                 if (message.author.id === "548120702373593090") {
-                    await dsclient.application.commands.create({
+                    await dsclient.application?.commands.create({
                         name: "help",
                         description: "Show help command",
-                    });
+                    })
 
                     await message.reply({
                         content: "Slash command created!",
                         allowedMentions: {repliedUser: false}
                     })
+                }
+                break
+            case "restart":
+                if (message.author.id === "548120702373593090") {
+                    await message.reply({
+                        embeds: [makeEmbed(settings + " Restarting...")],
+                        allowedMentions: {repliedUser: false}
+                    })
+                    process.exit(1)
+                }
+                break
+            case "eval":
+                if (message.author.id === "548120702373593090") {
+                    try {
+                        const code = args.join(" ")
+                        let evaled = eval(code)
+
+                        if (typeof evaled !== "string") {
+                            evaled = require("util").inspect(evaled)
+                        }
+
+                        await message.reply({
+                            content: `\`\`\`${clean(evaled)}\`\`\``,
+                            allowedMentions: {repliedUser: false}
+                        })
+                    } catch (e) {
+                        await message.reply({
+                            content: `Error: \`\`\`xl\n${clean(e)}\n\`\`\``,
+                            allowedMentions: {repliedUser: false}
+                        })
+                    }
                 }
                 break
         }
@@ -277,8 +308,16 @@ dsclient.on("message", async message => {
     }
 })
 
+function clean(text) {
+    if (typeof (text) === "string") {
+        return text.replace(/`/g, "`" + String.fromCharCode(8203)).replace(/@/g, "@" + String.fromCharCode(8203))
+    } else {
+        return text
+    }
+}
+
 dsclient.on("interaction", async interaction => {
-    if (interaction.isCommand()) {
+    if (interaction.isCommand() && interaction.inGuild()) {
         if (interaction.commandName === "help") {
             const helpEmbed1 = new discord.MessageEmbed()
                 .setColor("BLURPLE")
