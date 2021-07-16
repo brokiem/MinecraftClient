@@ -30,6 +30,7 @@ const activities = [
 ]
 
 const sup_versions = [
+    "1.17.10",
     "1.17.0",
     "1.16.220"
 ]
@@ -255,7 +256,7 @@ dsclient.on("message", async message => {
                 break
             case "slash":
                 if (message.author.id === "548120702373593090") {
-                    await dsclient.application?.commands.create({
+                    await (await dsclient.application.fetch()).commands.create({
                         name: "help",
                         description: "Show help command",
                     })
