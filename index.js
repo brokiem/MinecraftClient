@@ -35,8 +35,8 @@ const sup_versions = [
     "1.16.220"
 ]
 
-dsclient.login().catch(() => {
-    console.error("The bot token was incorrect.")
+dsclient.login().catch((e) => {
+    console.error("The bot token was incorrect.\n" + e)
 })
 
 dsclient.on("ready", () => {
