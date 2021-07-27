@@ -503,6 +503,10 @@ function connect(message, address, port, version = "auto") {
             if (clients[channel]["enableChat"]) {
                 const string = "abcdefgklmr0123456789"
 
+                if (packet.type === "translation") {
+                    packet.message = translateMessage(packet)
+                }
+
                 clients[channel]["filteredTextPacket"] = packet.message
                 if (clients[channel]["filteredTextPacket"] !== undefined) {
                     for (let i = 0; i < string.length; i++) {
@@ -561,6 +565,21 @@ function connect(message, address, port, version = "auto") {
 
         channel.send(x + " Unable to connect to " + address + " " + port + ": " + error.message)
     })
+}
+
+function translateMessage(packet) {
+    let message = '';
+
+    switch (packet.message) {
+        case "§d%chat.type.announcement":
+            message = "[" + packet.paramaters[0] + "] " + packet.paramaters[1]
+            break
+        case "§e%multiplayer.player.joined":
+            message = packet.paramaters[0] + " joined the game"
+            break
+    }
+
+    return message
 }
 
 function checkMaxClient(message) {

@@ -4,7 +4,7 @@
   "dependencies": {
     "bedrock-protocol": "^3.5.0",
     "minecraft-server-util": "3.4.4",
-    "discord.js": "13.0.0-dev.4d53d0f.1626566655"
+    "discord.js": "dev"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
