@@ -56,7 +56,7 @@ dsclient.on("ready", () => {
     console.log("RAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB")
 })
 
-dsclient.on("message", async message => {
+dsclient.on("messageCreate", async message => {
     if (!message.guild.me.permissions.has("SEND_MESSAGES")) {
         return
     }
