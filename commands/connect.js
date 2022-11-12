@@ -5,8 +5,7 @@ export async function run(dsclient, interaction) {
     const port = interaction.options.get("port")['value']
     const version = interaction.options.get("version")
 
-    if (typeof version !== 'undefined') {
-        console.log(version)
+    if ((typeof version !== 'undefined') || (version !== null)) {
         if (!sup_versions.includes(version['value'])) {
             interaction.reply({
                 embeds: [makeEmbed(settings + " Supported versions: " + sup_versions.join(", "))],
