@@ -1,27 +1,28 @@
 //process.env.DEBUG = "minecraft-protocol"
 
-const discord = require("discord.js")
-const dsclient = new discord.Client({intents: [discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_MESSAGES]})
-const {Client} = require("bedrock-protocol")
-const query = require("minecraft-server-util")
-const os = require("os")
+import discord from 'discord.js'
+import {Client} from 'bedrock-protocol'
+import query from 'minecraft-server-util'
+import fs from 'fs'
 
-let clients = []
-let connectedClient = 0
-let debug = false
+const dsclient = new discord.Client({intents: [discord.Intents.FLAGS.GUILDS, discord.Intents.FLAGS.GUILD_MESSAGES]})
+
+export let clients = []
+export let connectedClient = 0
+export let debug = false
 
 const prefix = "*"
-const mcversion = "1.1.1"
+export const mcversion = "1.1.1"
 
-const x = "<:brokiem_x:849486576727097384>"
-const e = "<:enter:849493018910261259>"
-const auth = "<:auth:849493635820158977>"
-const signal = "<:stage:849498188096077834>"
-const reply = "<:reply:849498663956774942>"
-const barrier = "<:barrier:849501525596438539>"
-const slash = "<:slash:856511320421302273>"
-const botdev = "<:botdev:856511739972550666>"
-const settings = "<:settings:856517667128999947>"
+export const x = "<:brokiem_x:849486576727097384>"
+export const e = "<:enter:849493018910261259>"
+export const auth = "<:auth:849493635820158977>"
+export const signal = "<:stage:849498188096077834>"
+export const reply = "<:reply:849498663956774942>"
+export const barrier = "<:barrier:849501525596438539>"
+export const slash = "<:slash:856511320421302273>"
+export const botdev = "<:botdev:856511739972550666>"
+export const settings = "<:settings:856517667128999947>"
 
 const activities = [
     "*invite",
@@ -29,11 +30,23 @@ const activities = [
     "*help"
 ]
 
-const sup_versions = [
-    "1.17.10",
-    "1.17.0",
-    "1.16.220"
+export const sup_versions = [
+    "1.18.0", "1.18.11", "1.18.30", "1.19.1",
+    "1.19.10", "1.19.20", "1.19.21", "1.19.30",
+    "1.19.40", "1.17.10", "1.17.0", "1.16.220"
 ]
+
+dsclient.commands = new discord.Collection()
+
+// Load all bot commands
+const commands = fs.readdirSync("./commands").filter(file => file.endsWith(".js"))
+for (const file of commands) {
+    const commandName = file.split(".")[0]
+    const command = import(`./commands/${file}`).then((cmd) => {
+        console.log(`Loading command ${commandName}`)
+        dsclient.commands.set(commandName, cmd)
+    })
+}
 
 dsclient.login().catch((e) => {
     console.error("The bot token was incorrect.\n" + e)
@@ -51,26 +64,16 @@ dsclient.on("ready", () => {
         i <= activities.length ? ++i : i = 0
     }, 30000)
 
-    console.log("Bot ready and online!\n")
-
+    console.log("\nBot ready and online!\n")
     console.log("RAM Usage: " + Math.round(process.memoryUsage().rss / 10485.76) / 100 + " MB")
 })
 
-dsclient.on("message", async message => {
+dsclient.on("messageCreate", async message => {
     if (!message.guild.me.permissions.has("SEND_MESSAGES")) {
         return
     }
 
     try {
-        if (message.content.includes(dsclient.user.id) && message.channel.type === "text" && !message.author.bot) {
-            message.channel.send({embeds: [makeEmbed(slash + " My prefix is * (Asterisk) | *help")]}).then(msg => {
-                setTimeout(function () {
-                    msg.delete()
-                }, 10000)
-            })
-            return
-        }
-
         if (message.author.bot || !message.content.startsWith(prefix) || message.channel.type !== "text") return
 
         const args = message.content.slice(prefix.length).trim().split(/ +/)
@@ -78,193 +81,9 @@ dsclient.on("message", async message => {
         const channel = message.channel
 
         switch (command) {
-            case "debug":
-                if (message.author.id === "548120702373593090") {
-                    debug = !debug
-                    await message.reply("Debug successfully " + (debug ? "enabled" : "disabled"))
-                }
-                break
-            case "help":
-                const helpEmbed1 = new discord.MessageEmbed()
-                    .setColor("BLURPLE")
-                    .setTitle(slash + " Command List\n\n")
-                    .setThumbnail("https://cdn.discordapp.com/attachments/833621011097845830/856845502104076289/856511320421302273.png")
-                    .addField("*query <address> <port>", "Query a Minecraft server (java or bedrock)")
-                    .addField("*join <address> <port> <version>", "Join to Minecraft server (bedrock)")
-                    .addField("*chat <message>", "Send chat to connected server")
-                    .addField("*enablechat", "Enable server chat to discord channel")
-                    .addField("*form <button id>", "Send form resp to connected server")
-                    .addField("*disconnect", "Disconnect from connected server")
-                    .addField("*invite", "Get bot invite link")
-
-                await message.reply({embeds: [helpEmbed1], allowedMentions: {repliedUser: false}})
-                break
-            case "query":
-                if (args.length > 0) {
-                    await channel.send(signal + " Getting query info...")
-                    await ping(channel, args[0], isNaN(args[1]) ? 19132 : args[1])
-                } else {
-                    await message.reply({
-                        embeds: [makeEmbed(slash + " **Usage:** *query <address> <port>")],
-                        allowedMentions: {repliedUser: false}
-                    })
-                }
-                break
-            case "connect":
-            case "join":
-                if (args.length > 0) {
-                    if (args[2] !== undefined && !sup_versions.includes(args[2])) {
-                        await message.reply({
-                            embeds: [makeEmbed(settings + " Supported versions: " + sup_versions.join(", "))],
-                            allowedMentions: {repliedUser: false}
-                        })
-                        return
-                    }
-
-                    connect(message, args[0], isNaN(args[1]) ? 19132 : args[1], args[2] ?? "auto")
-                } else {
-                    await message.reply({
-                        embeds: [makeEmbed(slash + " **Usage:** *connect <address> <port> <version>")],
-                        allowedMentions: {repliedUser: false}
-                    })
-                }
-                break
-            case "chat":
-            case "message":
-                if (isConnected(channel)) {
-                    if (args.length > 0) {
-                        if (args.join(" ").charAt(0) === "/") {
-                            sendCommand(channel, args.join(" "))
-                            await channel.send(reply + " Sending command...")
-                        } else {
-                            chat(channel, args.join(" "))
-                            await channel.send(reply + " Sending message...")
-                        }
-                    } else {
-                        await message.reply({
-                            embeds: [makeEmbed(slash + " **Usage:** *chat <message>")],
-                            allowedMentions: {repliedUser: false}
-                        })
-                    }
-                } else {
-                    await message.reply({
-                        content: x + " I haven't connected to any server yet!",
-                        allowedMentions: {repliedUser: false}
-                    })
-                }
-                break
-            case "move":
-            case "walk":
-                if (isConnected(channel)) {
-                    move(channel)
-                } else {
-                    await message.reply({
-                        content: x + " I haven't connected to any server yet!",
-                        allowedMentions: {repliedUser: false}
-                    })
-                }
-                break
-            case "form":
-                if (isConnected(channel)) {
-                    if (clients[channel]["formId"] !== undefined) {
-                        if (args.length > 0) {
-                            await channel.send(reply + " Sending modal form response")
-                            sendModalResponse(channel, args.join(" "))
-                            clients[channel]["formId"] = undefined
-                        }
-                    } else {
-                        await message.reply({
-                            content: x + " No ModalFormRequestPacket found!",
-                            allowedMentions: {repliedUser: false}
-                        })
-                    }
-                } else {
-                    await message.reply({
-                        content: x + " I haven't connected to any server yet!",
-                        allowedMentions: {repliedUser: false}
-                    })
-                }
-                break
-            case "enablechat":
-                if (isConnected(channel)) {
-                    clients[channel]["enableChat"] = !clients[channel]["enableChat"]
-                    await channel.send(":ballot_box_with_check: Chat from server successfully " + (debug ? "enabled" : "disabled"))
-                } else {
-                    await message.reply({
-                        content: x + " I haven't connected to any server yet!",
-                        allowedMentions: {repliedUser: false}
-                    })
-                }
-                break
-            case "close":
-            case "disconnect":
-                disconnect(message)
-                break
-            case "invite":
-            case "stats":
-            case "status":
-            case "uptime":
-                const invite = new discord.MessageButton().setStyle("LINK").setLabel("Invite")
-                    .setURL("https://discord.com/oauth2/authorize?client_id=" + dsclient.user.id + "&permissions=3072&scope=bot")
-                const vote = new discord.MessageButton().setStyle("LINK").setLabel("Vote")
-                    .setURL("https://top.gg/bot/844733770581803018/vote")
-
-                const row = new discord.MessageActionRow().addComponents(invite).addComponents(vote)
-
-                await message.reply({
-                    components: [row],
-                    embeds: [makeEmbed("" +
-                        "**❯  Minecraft Client** - v" + mcversion +
-                        "\n\n" +
-                        "• CPU Usage: " + os.loadavg().toString().split(",")[0] + "%\n" +
-                        "• RAM Usage: " + (Math.round(process.memoryUsage().rss / 10485.76) / 100) + " MB/" + (Math.round(os.totalmem() / 10485.76) / 100).toString().charAt(0) + " GB\n" +
-                        "\n" +
-                        "• Uptime: " + await getUptime() + "\n" +
-                        "• Latency: " + dsclient.ws.ping + "ms\n" +
-                        "• Guilds: " + dsclient.guilds.cache.size + "\n" +
-                        "• Clients: " + connectedClient + "/20\n" +
-                        "\n" +
-                        "• Developer: [brokiem](https://github.com/brokiem)\n" +
-                        "• Library: discord.js v13\n" +
-                        "• Github: [MinecraftClient](https://github.com/brokiem/MinecraftClient)"
-                    ).setColor("BLURPLE")],
-                    allowedMentions: {repliedUser: false}
-                })
-                break
-            case "ping":
-            case "latency":
-                const latency = dsclient.ws.ping
-                const embed = makeEmbed(signal + " Discord API Latency: " + latency + "ms")
-
-                if (latency <= 74) {
-                    embed.setColor("GREEN")
-                } else if (latency >= 75 && latency <= 200) {
-                    embed.setColor("YELLOW")
-                } else {
-                    embed.setColor("RED")
-                }
-
-                await message.reply({
-                    embeds: [embed],
-                    allowedMentions: {repliedUser: false}
-                })
-                break
             case "servers":
                 if (message.author.id === "548120702373593090") {
                     await channel.send("Servers: (" + dsclient.guilds.cache.size + ")\n - " + dsclient.guilds.cache.array().join("\n - "))
-                }
-                break
-            case "slash":
-                if (message.author.id === "548120702373593090") {
-                    await (await dsclient.application.fetch()).commands.create({
-                        name: "help",
-                        description: "Show help command",
-                    })
-
-                    await message.reply({
-                        content: "Slash command created!",
-                        allowedMentions: {repliedUser: false}
-                    })
                 }
                 break
             case "restart":
@@ -309,6 +128,10 @@ dsclient.on("message", async message => {
     }
 })
 
+dsclient.on("guildCreate", async guild => {
+    registerSlashCommands(guild.id)
+})
+
 function clean(text) {
     if (typeof (text) === "string") {
         return text.replace(/`/g, "`" + String.fromCharCode(8203)).replace(/@/g, "@" + String.fromCharCode(8203))
@@ -317,27 +140,130 @@ function clean(text) {
     }
 }
 
-dsclient.on("interaction", async interaction => {
+dsclient.on("interactionCreate", async interaction => {
     if (interaction.isCommand() && interaction.inGuild()) {
-        if (interaction.commandName === "help") {
-            const helpEmbed1 = new discord.MessageEmbed()
-                .setColor("BLURPLE")
-                .setTitle(slash + " Command List\n\n")
-                .setThumbnail("https://cdn.discordapp.com/attachments/833621011097845830/856845502104076289/856511320421302273.png")
-                .addField("*query <address> <port>", "Query a Minecraft server (java or bedrock)")
-                .addField("*join <address> <port> <version>", "Join to Minecraft server (bedrock)")
-                .addField("*chat <message>", "Send chat to connected server")
-                .addField("*enablechat", "Enable server chat to discord channel")
-                .addField("*form <button id>", "Send form resp to connected server")
-                .addField("*disconnect", "Disconnect from connected server")
-                .addField("*invite", "Get bot invite link")
+        const command = dsclient.commands.get(interaction.commandName)
+        if (!command) return
 
-            interaction.reply({embeds: [helpEmbed1], allowedMentions: {repliedUser: false}})
-        }
+        await command.run(dsclient, interaction)
     }
 })
 
-async function ping(channel, address, port = "19132") {
+function registerSlashCommands(guild_id) {
+    const commands = [
+        {
+            "name": "help",
+            "type": 1,
+            "description": "Show help command",
+        },
+        {
+            "name": "query",
+            "type": 1,
+            "description": "Query minecraft server (java & bedrock)",
+            "options": [
+                {
+                    "name": "address",
+                    "description": "Server address (ex: play.hypixel.net)",
+                    "type": 3,
+                    "required": true
+                },
+                {
+                    "name": "port",
+                    "description": "Server port (ex: 25565)",
+                    "type": 4,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "connect",
+            "type": 1,
+            "description": "Connect to minecraft server (bedrock only)",
+            "options": [
+                {
+                    "name": "address",
+                    "description": "Server address (ex: play.hypixel.net)",
+                    "type": 3,
+                    "required": true
+                },
+                {
+                    "name": "port",
+                    "description": "Server port (ex: 25565)",
+                    "type": 4,
+                    "required": true
+                },
+                {
+                    "name": "version",
+                    "description": "Client version (ex: 1.19.40)",
+                    "type": 3,
+                    "required": false
+                }
+            ]
+        },
+        {
+            "name": "chat",
+            "type": 1,
+            "description": "Send chat to the minecraft server",
+            "options": [
+                {
+                    "name": "message",
+                    "description": "Chat message",
+                    "type": 3,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "move",
+            "type": 1,
+            "description": "Send random movement to the server"
+        },
+        {
+            "name": "form",
+            "type": 1,
+            "description": "Send form response to the server",
+            "options": [
+                {
+                    "name": "button_id",
+                    "description": "Form button id",
+                    "type": 3,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "enablechat",
+            "type": 1,
+            "description": "Enable or disable chat from the server"
+        },
+        {
+            "name": "disconnect",
+            "type": 1,
+            "description": "Disconnect client from minecraft server"
+        },
+        {
+            "name": "ping",
+            "type": 1,
+            "description": "Get Discord bot latency"
+        },
+        {
+            "name": "invite",
+            "type": 1,
+            "description": "Get Discord bot invite link"
+        },
+        {
+            "name": "servers",
+            "type": 1,
+            "description": "Get connected servers"
+        }
+    ]
+
+    for (const command of commands) {
+        dsclient.guilds.cache.get(guild_id)?.commands.create(command)
+    }
+}
+
+export async function ping(channel, address, port = "19132") {
     if (parseInt(port) === 25565) {
         await pingJava(channel, address, 25565)
         return
@@ -364,23 +290,23 @@ async function pingJava(channel, address, port) {
     })
 }
 
-function connect(message, address, port, version = "auto") {
-    const channel = message.channel
+export function connect(interaction, address, port, version = "auto") {
+    const channel = interaction.channel
 
     if (isConnected(channel, false)) {
-        message.reply({
+        interaction.reply({
             content: x + " I've connected on this channel!",
             allowedMentions: {repliedUser: false}
         })
         return
     }
 
-    if (checkMaxClient(message)) {
+    if (checkMaxClient(channel)) {
         return
     }
 
     console.log("Connecting to " + address + " on port " + port + " with version " + version)
-    channel.send(signal + " Connecting to " + address + " on port " + port + " with version " + version)
+    interaction.reply(signal + " Connecting to " + address + " on port " + port + " with version " + version)
 
     if (clients[channel.guild] !== undefined) {
         ++clients[channel.guild]
@@ -396,7 +322,6 @@ function connect(message, address, port, version = "auto") {
             host: address,
             port: parseInt(port),
             offline: false,
-            authTitle: "00000000441cc96b",
             skipPing: true
         })
 
@@ -406,7 +331,6 @@ function connect(message, address, port, version = "auto") {
                 port: parseInt(port),
                 version: version,
                 offline: false,
-                authTitle: "00000000441cc96b",
                 skipPing: true
             })
         }
@@ -416,7 +340,7 @@ function connect(message, address, port, version = "auto") {
         clients[channel]["connectTimeout"] = setTimeout(function () {
             if (!clients[channel]["connected"]) {
                 channel.send(x + " Server didn't respond in 10 seconds. Something wrong happened\n" + e + " Maybe this problem happened because: Incompatible version/protocol, packet processing error or connection problem")
-                disconnect(message, false)
+                disconnect(interaction, false)
             }
         }, 10000)
 
@@ -426,7 +350,7 @@ function connect(message, address, port, version = "auto") {
         clients[channel]["maxTimeConnectedTimeout"] = setTimeout(function () {
             if (isConnected(channel, false)) {
                 channel.send(x + " Disconnected because automatically disconnected every 20 minutes")
-                disconnect(message, false)
+                disconnect(interaction, false)
             }
         }, 1200000)
 
@@ -519,8 +443,8 @@ function connect(message, address, port, version = "auto") {
 
         client.on("transfer", (packet) => {
             channel.send({embeds: [makeEmbed(e + "  **TransferPacket received**\n\nAddress: " + packet.server_address + "\nPort: " + packet.port)]})
-            disconnect(message, false)
-            connect(message, packet.server_address, packet.port)
+            disconnect(interaction, false)
+            connect(interaction, packet.server_address, packet.port)
         })
 
         client.once("resource_packs_info", () => {
@@ -547,7 +471,7 @@ function connect(message, address, port, version = "auto") {
 
         client.once("close", () => {
             if (isConnected(channel)) {
-                disconnect(message, false)
+                disconnect(interaction, false)
             }
 
             channel.send(x + " Disconnected: Client closed!")
@@ -582,11 +506,9 @@ function translateMessage(packet) {
     return message
 }
 
-function checkMaxClient(message) {
-    const channel = message.channel
-
+function checkMaxClient(channel) {
     if (connectedClient >= 20) {
-        message.reply({
+        channel.send({
             embeds: [makeEmbed("All Clients are busy! Please try again later.")],
             allowedMentions: {repliedUser: false}
         })
@@ -594,7 +516,7 @@ function checkMaxClient(message) {
     }
 
     if (clients[channel.guild] !== undefined && clients[channel.guild] >= 2) {
-        message.reply({
+        channel.send({
             embeds: [makeEmbed(`Oof, this Guild has reached the limit of connected clients (${clients[channel.guild]})!`)],
             allowedMentions: {repliedUser: false}
         })
@@ -611,18 +533,23 @@ function sendCachedTextPacket(channel) {
     }
 }
 
-function makeEmbed(string) {
+export function makeEmbed(string) {
     return new discord.MessageEmbed().setDescription(string)
 }
 
-function sendModalResponse(channel, string) {
-    clients[channel]["client"].queue("modal_form_response", {
+export function sendModalResponse(channel, string) {
+    let formData = {
         form_id: clients[channel]["formId"],
-        data: string
-    })
+        has_response_data: true,
+        data: string,
+        has_cancel_reason: false,
+        cancel_reason: 0
+    }
+
+    clients[channel]["client"].queue("modal_form_response", formData)
 }
 
-function move(channel) {
+export function move(channel) {
     if (clients[channel]["player_position"] === undefined) {
         channel.send(x + " Please wait for the server to send the client position")
         return
@@ -671,7 +598,7 @@ function rand(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
-function chat(channel, string) {
+export function chat(channel, string) {
     clients[channel]["client"].queue("text", {
         type: "chat",
         needs_translation: false,
@@ -683,7 +610,7 @@ function chat(channel, string) {
     })
 }
 
-function sendCommand(channel, string) {
+export function sendCommand(channel, string) {
     clients[channel]["client"].queue("command_request", {
         command: string,
         origin: {
@@ -694,7 +621,7 @@ function sendCommand(channel, string) {
     })
 }
 
-function isConnected(channel, checkConnected = true) {
+export function isConnected(channel, checkConnected = true) {
     if (checkConnected) {
         return clients[channel] !== undefined && clients[channel]["connected"]
     }
@@ -702,11 +629,11 @@ function isConnected(channel, checkConnected = true) {
     return clients[channel] !== undefined
 }
 
-function disconnect(message, showMessage = true) {
-    const channel = message.channel
+export function disconnect(interaction, showMessage = true) {
+    const channel = interaction.channel
 
     if (!isConnected(channel, false)) {
-        message.reply({
+        interaction.reply({
             content: x + " I haven't connected to any server yet!\n",
             allowedMentions: {repliedUser: false}
         })
@@ -733,11 +660,11 @@ function disconnect(message, showMessage = true) {
     client = null
 
     if (showMessage) {
-        channel.send(auth + " Disconnected succesfully!")
+        interaction.reply(auth + " Disconnected succesfully!")
     }
 }
 
-async function getUptime() {
+export async function getUptime() {
     let totalSeconds = (dsclient.uptime / 1000)
     let hours = Math.floor(totalSeconds / 3600)
     totalSeconds %= 3600

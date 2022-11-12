@@ -1,10 +1,11 @@
 {
   "name": "minecraftclient-discord",
   "version": "1.1.2",
+  "type": "module",
   "dependencies": {
-    "bedrock-protocol": "^3.5.0",
+    "bedrock-protocol": "^3.21.0",
     "minecraft-server-util": "3.4.4",
-    "discord.js": "dev"
+    "discord.js": "v13-lts"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
