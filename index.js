@@ -145,7 +145,11 @@ dsclient.on("interactionCreate", async interaction => {
         const command = dsclient.commands.get(interaction.commandName)
         if (!command) return
 
-        await command.run(dsclient, interaction)
+        try {
+            await command.run(dsclient, interaction)
+        } catch (e) {
+            console.error(e)
+        }
     }
 })
 
