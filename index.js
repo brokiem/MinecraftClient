@@ -25,9 +25,9 @@ export const botdev = "<:botdev:856511739972550666>"
 export const settings = "<:settings:856517667128999947>"
 
 const activities = [
-    "*invite",
+    "/invite",
     "Minecraft",
-    "*help"
+    "/help"
 ]
 
 export const sup_versions = [
@@ -417,9 +417,9 @@ export function connect(interaction, address, port, version = "auto") {
                     buttonId++
                 })
 
-                channel.send({embeds: [makeEmbed(text + "```" + buttons.join("\n") + "```" + "\nType ( *form <button id> ) to response")]})
+                channel.send({embeds: [makeEmbed(text + "```" + buttons.join("\n") + "```" + "\nType ( /form <button id> ) to response")]})
             } else {
-                channel.send(x + ` I can't handle custom form yet, Use " *form null " to close the form`)
+                channel.send(x + ` I can't handle custom form yet, Use " /form null " to close the form`)
             }
 
             if (debug) {
