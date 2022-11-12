@@ -5,17 +5,17 @@ export async function run(dsclient, interaction) {
     const port = interaction.options.get("port")['value']
     const version = interaction.options.get("version")
 
-    if (version === null) version['value'] = null
-
-    if (!sup_versions.includes(version['value'])) {
-        interaction.reply({
-            embeds: [makeEmbed(settings + " Supported versions: " + sup_versions.join(", "))],
-            allowedMentions: {repliedUser: false}
-        })
-        return
+    if (version !== null) {
+        if (!sup_versions.includes(version['value'])) {
+            interaction.reply({
+                embeds: [makeEmbed(settings + " Supported versions: " + sup_versions.join(", "))],
+                allowedMentions: {repliedUser: false}
+            })
+            return
+        }
     }
 
-    connect(interaction, address, isNaN(port) ? 19132 : port, version['value'] ?? "auto")
+    connect(interaction, address, isNaN(port) ? 19132 : port, version === null ? "auto" : version['value'])
 }
 
 export function getName() {
